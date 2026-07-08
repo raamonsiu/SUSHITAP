@@ -101,6 +101,7 @@ export const SHADOWS = {
 export const DEV_LINKS = {
   githubUrl: 'https://github.com/raamonsiu',
   linkedinUrl: 'https://www.linkedin.com/in/ramon-lópez-cros',
+  buyMeACoffeeUrl: 'https://buymeacoffee.com/d1ito',
 };
 
 export const APP_VERSION = '0.1.0';
