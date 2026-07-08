@@ -102,6 +102,7 @@ export const DEV_LINKS = {
   githubUrl: 'https://github.com/raamonsiu',
   linkedinUrl: 'https://www.linkedin.com/in/ramon-lópez-cros',
   buyMeACoffeeUrl: 'https://buymeacoffee.com/d1ito',
+  suggestionsEmail: 'ramonjunior04@gmail.com',
 };
 
 export const APP_VERSION = '0.1.0';

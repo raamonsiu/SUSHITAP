@@ -18,6 +18,12 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     sessionsTitle: 'Sesiones anteriores',
     piecesShort: 'pzas',
     empty: 'Aún no hay sesiones guardadas',
+    suggestions: 'Sugerencias',
+    suggestionsCta: 'Enviar una sugerencia',
+    suggestionsHint: 'Escribe tu idea y se abrirá tu app de correo para enviárnosla.',
+    suggestionsPlaceholder: 'Escribe aquí tu sugerencia...',
+    send: 'Enviar',
+    cancel: 'Cancelar',
   },
   en: {
     eaten: 'Today you ate',
@@ -36,6 +42,12 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     sessionsTitle: 'Past sessions',
     piecesShort: 'pcs',
     empty: 'No saved sessions yet',
+    suggestions: 'Suggestions',
+    suggestionsCta: 'Send a suggestion',
+    suggestionsHint: 'Write your idea and your mail app will open to send it to us.',
+    suggestionsPlaceholder: 'Write your suggestion here...',
+    send: 'Send',
+    cancel: 'Cancel',
   },
 };
 

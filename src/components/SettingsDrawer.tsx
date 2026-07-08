@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { DEV_LINKS, NEUTRAL, RADII, SHADOWS, APP_VERSION } from '../theme';
 import { FLAVOR_LABELS, LANG_LABELS, STRINGS } from '../i18n';
 import type { Flavor, Lang } from '../types';
+import SuggestionModal from './SuggestionModal';
 
 type Props = {
   open: boolean;
@@ -64,6 +65,7 @@ function BuyMeACoffeeIcon({ color }: { color: string }) {
  */
 export default function SettingsDrawer({ open, onClose, accent, lang, flavor, onSetLang, onSetFlavor }: Props) {
   const strings = STRINGS[lang];
+  const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
 
   return (
     <View style={styles.content} pointerEvents={open ? 'auto' : 'none'}>
@@ -104,6 +106,13 @@ export default function SettingsDrawer({ open, onClose, accent, lang, flavor, on
         </View>
       </View>
 
+      <View style={styles.section}>
+        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.suggestions}</Text>
+        <Pressable style={styles.fullWidthChip} onPress={() => setSuggestionModalOpen(true)}>
+          <Text style={styles.linkText}>{strings.suggestionsCta}</Text>
+        </Pressable>
+      </View>
+
       <View style={styles.footer}>
         <View style={{ alignItems: 'center' }}>
           <Text style={styles.footerText}>{strings.footer}</Text>
@@ -124,12 +133,19 @@ export default function SettingsDrawer({ open, onClose, accent, lang, flavor, on
               <Text style={styles.linkText}>LinkedIn</Text>
             </Pressable>
           </View>
-          <Pressable style={styles.coffeeChip} onPress={() => Linking.openURL(DEV_LINKS.buyMeACoffeeUrl)}>
+          <Pressable style={styles.fullWidthChip} onPress={() => Linking.openURL(DEV_LINKS.buyMeACoffeeUrl)}>
             <BuyMeACoffeeIcon color={accent} />
             <Text style={styles.linkText}>Buy me a coffee</Text>
           </Pressable>
         </View>
       </View>
+
+      <SuggestionModal
+        visible={suggestionModalOpen}
+        onClose={() => setSuggestionModalOpen(false)}
+        accent={accent}
+        lang={lang}
+      />
     </View>
   );
 }
@@ -215,7 +231,7 @@ const styles = StyleSheet.create({
     borderRadius: RADII.pill,
     backgroundColor: NEUTRAL.pillInactiveBg,
   },
-  coffeeChip: {
+  fullWidthChip: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
