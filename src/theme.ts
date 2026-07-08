@@ -47,11 +47,11 @@ export const FLAVORS: Record<
 
 export const NEUTRAL = {
   textBrown: '#5A4A42',
-  labelMuted1: '#B79A8C',
-  labelMuted2: '#A98A7A',
-  labelMuted3: '#9A8A80',
-  labelMuted4: '#C6B4A9',
-  labelMuted5: '#B0A096',
+  mutedTextStrong: '#B79A8C',
+  mutedTextMedium: '#A98A7A',
+  mutedTextSoft: '#9A8A80',
+  mutedTextFaint: '#C6B4A9',
+  mutedTextFaintest: '#B0A096',
   drawerBg: '#FFFCFA',
   closeBtnBg: '#F4ECE7',
   pillInactiveBg: '#F3ECE7',

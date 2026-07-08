@@ -6,6 +6,10 @@ type Props = {
   colors: readonly [string, string, string];
 };
 
+/**
+ * Full-screen radial gradient behind the home screen.
+ * @param colors the theme's three gradient stops, from center to edge.
+ */
 export default function Background({ colors }: Props) {
   return (
     <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">

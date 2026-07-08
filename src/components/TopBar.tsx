@@ -12,6 +12,7 @@ type Props = {
 
 const BUTTON_SIZE = 60;
 
+/** Top row with the menu (settings) and history buttons, pinned below the status bar. */
 export default function TopBar({ accent, onOpenMenu, onOpenHistory }: Props) {
   const insets = useSafeAreaInsets();
 

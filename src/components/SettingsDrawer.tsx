@@ -15,6 +15,7 @@ type Props = {
   onSetFlavor: (flavor: Flavor) => void;
 };
 
+/** A single rounded choice button used for the language and flavor rows. */
 function Pill({ label, active, accent, onPress }: { label: string; active: boolean; accent: string; onPress: () => void }) {
   return (
     <Pressable
@@ -30,6 +31,7 @@ function Pill({ label, active, accent, onPress }: { label: string; active: boole
   );
 }
 
+/** GitHub brand glyph, filled with the current theme accent. */
 function GithubIcon({ color }: { color: string }) {
   return (
     <Svg width={19} height={19} viewBox="0 0 24 24" fill={color}>
@@ -38,6 +40,7 @@ function GithubIcon({ color }: { color: string }) {
   );
 }
 
+/** LinkedIn brand glyph, filled with the current theme accent. */
 function LinkedinIcon({ color }: { color: string }) {
   return (
     <Svg width={19} height={19} viewBox="0 0 24 24" fill={color}>
@@ -46,37 +49,47 @@ function LinkedinIcon({ color }: { color: string }) {
   );
 }
 
+/**
+ * Content of the left drawer: language and sushi flavor pickers (choosing a
+ * flavor also drives the app-wide color theme), plus the developer footer.
+ */
 export default function SettingsDrawer({ open, onClose, accent, lang, flavor, onSetLang, onSetFlavor }: Props) {
-  const t = STRINGS[lang];
+  const strings = STRINGS[lang];
 
   return (
     <View style={styles.content} pointerEvents={open ? 'auto' : 'none'}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t.settings}</Text>
+        <Text style={styles.title}>{strings.settings}</Text>
         <Pressable onPress={onClose} accessibilityLabel="Cerrar" style={styles.closeBtn}>
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: accent }]}>{t.language}</Text>
+        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.language}</Text>
         <View style={styles.pillRow}>
-          {(['es', 'en'] as Lang[]).map((k) => (
-            <Pill key={k} label={LANG_LABELS[lang][k]} active={lang === k} accent={accent} onPress={() => onSetLang(k)} />
+          {(['es', 'en'] as Lang[]).map((langCode) => (
+            <Pill
+              key={langCode}
+              label={LANG_LABELS[lang][langCode]}
+              active={lang === langCode}
+              accent={accent}
+              onPress={() => onSetLang(langCode)}
+            />
           ))}
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: accent }]}>{t.piece}</Text>
+        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.piece}</Text>
         <View style={styles.pillRow}>
-          {(['salmon', 'tuna', 'egg'] as Flavor[]).map((k) => (
+          {(['salmon', 'tuna', 'egg'] as Flavor[]).map((flavorCode) => (
             <Pill
-              key={k}
-              label={FLAVOR_LABELS[lang][k]}
-              active={flavor === k}
+              key={flavorCode}
+              label={FLAVOR_LABELS[lang][flavorCode]}
+              active={flavor === flavorCode}
               accent={accent}
-              onPress={() => onSetFlavor(k)}
+              onPress={() => onSetFlavor(flavorCode)}
             />
           ))}
         </View>
@@ -84,14 +97,14 @@ export default function SettingsDrawer({ open, onClose, accent, lang, flavor, on
 
       <View style={styles.footer}>
         <View style={{ alignItems: 'center' }}>
-          <Text style={styles.footerText}>{t.footer}</Text>
+          <Text style={styles.footerText}>{strings.footer}</Text>
           <Text style={styles.versionText}>
-            {t.version} {APP_VERSION}
+            {strings.version} {APP_VERSION}
           </Text>
         </View>
         <View style={styles.divider} />
         <View style={{ gap: 11 }}>
-          <Text style={[styles.sectionLabel, { color: accent }]}>{t.about}</Text>
+          <Text style={[styles.sectionLabel, { color: accent }]}>{strings.about}</Text>
           <View style={styles.pillRow}>
             <Pressable style={styles.linkChip} onPress={() => Linking.openURL(DEV_LINKS.githubUrl)}>
               <GithubIcon color={accent} />

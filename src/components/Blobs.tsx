@@ -18,16 +18,20 @@ const BLOB_DEFS = [
   { size: 240, bottom: -70, left: 30, opacity: 0.5, duration: 10000 },
 ] as const;
 
-function Blob({ color, def }: { color: string; def: (typeof BLOB_DEFS)[number] }) {
+/**
+ * A single soft background blob that drifts up and grows slightly, then
+ * reverses, in an endless loop. Position and timing come from `blobConfig`.
+ */
+function Blob({ color, blobConfig }: { color: string; blobConfig: (typeof BLOB_DEFS)[number] }) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
     progress.value = withRepeat(
-      withTiming(1, { duration: def.duration / 2, easing: Easing.inOut(Easing.quad) }),
+      withTiming(1, { duration: blobConfig.duration / 2, easing: Easing.inOut(Easing.quad) }),
       -1,
       true
     );
-  }, [def.duration, progress]);
+  }, [blobConfig.duration, progress]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -41,15 +45,15 @@ function Blob({ color, def }: { color: string; def: (typeof BLOB_DEFS)[number] }
       style={[
         {
           position: 'absolute',
-          width: def.size,
-          height: def.size,
-          borderRadius: def.size / 2,
+          width: blobConfig.size,
+          height: blobConfig.size,
+          borderRadius: blobConfig.size / 2,
           backgroundColor: color,
-          opacity: def.opacity,
-          top: 'top' in def ? def.top : undefined,
-          left: 'left' in def ? def.left : undefined,
-          right: 'right' in def ? def.right : undefined,
-          bottom: 'bottom' in def ? def.bottom : undefined,
+          opacity: blobConfig.opacity,
+          top: 'top' in blobConfig ? blobConfig.top : undefined,
+          left: 'left' in blobConfig ? blobConfig.left : undefined,
+          right: 'right' in blobConfig ? blobConfig.right : undefined,
+          bottom: 'bottom' in blobConfig ? blobConfig.bottom : undefined,
         },
         animatedStyle,
       ]}
@@ -57,11 +61,12 @@ function Blob({ color, def }: { color: string; def: (typeof BLOB_DEFS)[number] }
   );
 }
 
+/** Renders the three animated pastel blobs drifting behind the home screen. */
 export default function Blobs({ colors }: Props) {
   return (
     <>
-      {BLOB_DEFS.map((def, i) => (
-        <Blob key={i} color={colors[i]} def={def} />
+      {BLOB_DEFS.map((blobConfig, index) => (
+        <Blob key={index} color={colors[index]} blobConfig={blobConfig} />
       ))}
     </>
   );

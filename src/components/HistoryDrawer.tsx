@@ -16,6 +16,10 @@ type Props = {
   onNewSession: () => void;
 };
 
+/**
+ * Content of the right drawer: the in-progress session card (finalize/start
+ * new session actions) plus the scrollable list of past sessions.
+ */
 export default function HistoryDrawer({
   open,
   onClose,
@@ -27,13 +31,13 @@ export default function HistoryDrawer({
   onFinalize,
   onNewSession,
 }: Props) {
-  const t = STRINGS[lang];
+  const strings = STRINGS[lang];
   const canFinalize = count > 0;
 
   return (
     <View style={styles.content} pointerEvents={open ? 'auto' : 'none'}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t.history}</Text>
+        <Text style={styles.title}>{strings.history}</Text>
         <Pressable onPress={onClose} accessibilityLabel="Cerrar" style={styles.closeBtn}>
           <Text style={styles.closeText}>✕</Text>
         </Pressable>
@@ -41,7 +45,7 @@ export default function HistoryDrawer({
 
       <View style={[styles.card, { backgroundColor: softBg }]}>
         <View style={styles.cardRow}>
-          <Text style={styles.cardLabel}>{t.current}</Text>
+          <Text style={styles.cardLabel}>{strings.current}</Text>
           <Text style={[styles.cardCount, { color: accent }]}>{count}</Text>
         </View>
 
@@ -56,31 +60,31 @@ export default function HistoryDrawer({
           ]}
         >
           <Text style={[styles.finalizeText, { color: canFinalize ? '#fff' : NEUTRAL.disabledText }]}>
-            {t.finalize}
+            {strings.finalize}
           </Text>
         </Pressable>
 
         <Pressable onPress={onNewSession} style={[styles.newBtn, { borderColor: accent }]}>
-          <Text style={[styles.newText, { color: accent }]}>{t.newSession}</Text>
+          <Text style={[styles.newText, { color: accent }]}>{strings.newSession}</Text>
         </Pressable>
       </View>
 
       <View style={styles.listSection}>
-        <Text style={[styles.sectionLabel, { color: accent }]}>{t.sessionsTitle}</Text>
+        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.sessionsTitle}</Text>
         {sessions.length > 0 ? (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }}>
-            {sessions.map((s) => (
-              <View key={s.id} style={styles.row}>
-                <Text style={styles.rowWhen}>{formatSessionDate(s.start, lang)}</Text>
+            {sessions.map((session) => (
+              <View key={session.id} style={styles.row}>
+                <Text style={styles.rowWhen}>{formatSessionDate(session.start, lang)}</Text>
                 <View style={styles.rowTotalGroup}>
-                  <Text style={[styles.rowTotal, { color: accent }]}>{s.total}</Text>
-                  <Text style={styles.rowUnit}>{t.piecesShort}</Text>
+                  <Text style={[styles.rowTotal, { color: accent }]}>{session.total}</Text>
+                  <Text style={styles.rowUnit}>{strings.piecesShort}</Text>
                 </View>
               </View>
             ))}
           </ScrollView>
         ) : (
-          <Text style={styles.empty}>{t.empty}</Text>
+          <Text style={styles.empty}>{strings.empty}</Text>
         )}
       </View>
     </View>

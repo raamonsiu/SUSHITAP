@@ -23,6 +23,10 @@ import { loadState, saveCount, savePrefs, saveSessions, saveStart } from './stor
 import { FLAVORS, NEUTRAL } from './theme';
 import type { Flavor, Lang, Session } from './types';
 
+/**
+ * Main and only screen of the app. Owns all state (counter, prefs, sessions,
+ * drawer visibility) and renders the home view plus the two side drawers.
+ */
 export default function SushiCounter() {
   const [count, setCount] = useState(0);
   const [lang, setLang] = useState<Lang>('es');
@@ -35,29 +39,34 @@ export default function SushiCounter() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    loadState().then((s) => {
-      setCount(s.count);
-      setLang(s.prefs.lang);
-      setFlavor(s.prefs.flavor);
-      setSessions(s.sessions);
-      setCurrentStart(s.currentStart);
+    loadState().then((loadedState) => {
+      setCount(loadedState.count);
+      setLang(loadedState.prefs.lang);
+      setFlavor(loadedState.prefs.flavor);
+      setSessions(loadedState.sessions);
+      setCurrentStart(loadedState.currentStart);
       setLoaded(true);
     });
   }, []);
 
-  const t = STRINGS[lang];
+  const strings = STRINGS[lang];
   const theme = FLAVORS[flavor];
 
+  /**
+   * Handles a tap on the sushi. Increments the counter, persists it, and
+   * spawns a floating "+1" indicator that removes itself after 900ms.
+   * Pre: none. Post: `count` is incremented by 1 and saved to disk.
+   */
   const eat = () => {
-    const id = Date.now() + Math.random();
-    setCount((c) => {
-      const next = c + 1;
-      saveCount(next);
-      return next;
+    const floaterId = Date.now() + Math.random();
+    setCount((previousCount) => {
+      const nextCount = previousCount + 1;
+      saveCount(nextCount);
+      return nextCount;
     });
-    setFloaters((f) => [...f, { id }]);
+    setFloaters((previousFloaters) => [...previousFloaters, { id: floaterId }]);
     setTimeout(() => {
-      setFloaters((f) => f.filter((x) => x.id !== id));
+      setFloaters((previousFloaters) => previousFloaters.filter((floater) => floater.id !== floaterId));
     }, 900);
   };
 
@@ -76,52 +85,73 @@ export default function SushiCounter() {
     setHistoryOpen(false);
   };
 
+  /**
+   * Ends the current session. If it has any pieces, archives it to history.
+   * Always starts a fresh session timer, even when the count was already 0.
+   * Pre: none (button that triggers this is disabled when count === 0).
+   * Post: `count` is 0, `sessions` may gain a new entry, `currentStart` is now.
+   */
   const finalize = () => {
-    setCount((c) => {
-      if (c > 0) {
-        setSessions((prevSessions) => {
-          const rec: Session = { id: Date.now(), start: currentStart, end: Date.now(), total: c };
-          const next = [rec, ...prevSessions];
-          saveSessions(next);
-          return next;
+    setCount((currentCount) => {
+      if (currentCount > 0) {
+        setSessions((previousSessions) => {
+          const archivedSession: Session = {
+            id: Date.now(),
+            start: currentStart,
+            end: Date.now(),
+            total: currentCount,
+          };
+          const updatedSessions = [archivedSession, ...previousSessions];
+          saveSessions(updatedSessions);
+          return updatedSessions;
         });
       }
-      const ns = Date.now();
+      const newSessionStart = Date.now();
       saveCount(0);
-      saveStart(ns);
-      setCurrentStart(ns);
+      saveStart(newSessionStart);
+      setCurrentStart(newSessionStart);
       return 0;
     });
   };
 
+  /**
+   * Starts a new session from the history drawer. If the current session has
+   * pieces, archives it first (same as `finalize`); otherwise just closes the
+   * drawer, since there is nothing to reset.
+   */
   const newSession = () => {
-    setCount((c) => {
-      if (c > 0) {
-        setSessions((prevSessions) => {
-          const rec: Session = { id: Date.now(), start: currentStart, end: Date.now(), total: c };
-          const next = [rec, ...prevSessions];
-          saveSessions(next);
-          return next;
+    setCount((currentCount) => {
+      if (currentCount > 0) {
+        setSessions((previousSessions) => {
+          const archivedSession: Session = {
+            id: Date.now(),
+            start: currentStart,
+            end: Date.now(),
+            total: currentCount,
+          };
+          const updatedSessions = [archivedSession, ...previousSessions];
+          saveSessions(updatedSessions);
+          return updatedSessions;
         });
-        const ns = Date.now();
+        const newSessionStart = Date.now();
         saveCount(0);
-        saveStart(ns);
-        setCurrentStart(ns);
+        saveStart(newSessionStart);
+        setCurrentStart(newSessionStart);
         setHistoryOpen(false);
         return 0;
       }
       setHistoryOpen(false);
-      return c;
+      return currentCount;
     });
   };
 
-  const onSetLang = (next: Lang) => {
-    setLang(next);
-    savePrefs({ lang: next, flavor });
+  const onSetLang = (nextLang: Lang) => {
+    setLang(nextLang);
+    savePrefs({ lang: nextLang, flavor });
   };
-  const onSetFlavor = (next: Flavor) => {
-    setFlavor(next);
-    savePrefs({ lang, flavor: next });
+  const onSetFlavor = (nextFlavor: Flavor) => {
+    setFlavor(nextFlavor);
+    savePrefs({ lang, flavor: nextFlavor });
   };
 
   if (!loaded) return <View style={[styles.root, { backgroundColor: theme.softBg }]} />;
@@ -134,19 +164,19 @@ export default function SushiCounter() {
       <TopBar accent={theme.accent} onOpenMenu={openMenu} onOpenHistory={openHistory} />
 
       <View style={styles.middle}>
-        <Text style={[styles.eatenLabel, { color: NEUTRAL.labelMuted1 }]}>{t.eaten}</Text>
+        <Text style={[styles.eatenLabel, { color: NEUTRAL.labelMuted1 }]}>{strings.eaten}</Text>
 
         <CounterNumber count={count} accent={theme.accent} />
-        <Text style={styles.piecesLabel}>{t.pieces}</Text>
+        <Text style={styles.piecesLabel}>{strings.pieces}</Text>
 
         <View style={styles.sushiBlock}>
           <View style={styles.sushiWrap}>
-            {floaters.map((f) => (
-              <FloatingPlusOne key={f.id} accent={theme.accent} />
+            {floaters.map((floater) => (
+              <FloatingPlusOne key={floater.id} accent={theme.accent} />
             ))}
             <SushiButton onPress={eat} top={theme.top} topHi={theme.topHi} stripe={theme.stripe} />
           </View>
-          <Text style={styles.hint}>{t.tap}</Text>
+          <Text style={styles.hint}>{strings.tap}</Text>
         </View>
       </View>
 
@@ -187,6 +217,10 @@ export default function SushiCounter() {
   );
 }
 
+/**
+ * Full-screen dark scrim behind an open drawer. Fades in/out with `visible`
+ * and closes any open drawer when tapped (handled by the parent Pressable).
+ */
 function OverlayFade({ visible }: { visible: boolean }) {
   const opacity = useSharedValue(0);
   useEffect(() => {
@@ -196,19 +230,23 @@ function OverlayFade({ visible }: { visible: boolean }) {
   return <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: NEUTRAL.overlay }, style]} />;
 }
 
+/**
+ * Renders the big counter number and replays a "pop" bounce animation every
+ * time `count` changes after the initial mount.
+ */
 function CounterNumber({ count, accent }: { count: number; accent: string }) {
   const scale = useSharedValue(1);
-  const isFirst = useRef(true);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    if (isFirst.current) {
-      isFirst.current = false;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
       return;
     }
-    const bezier = Easing.bezier(0.34, 1.56, 0.64, 1);
+    const bounceEasing = Easing.bezier(0.34, 1.56, 0.64, 1);
     scale.value = withSequence(
-      withTiming(1.22, { duration: 180, easing: bezier }),
-      withTiming(1, { duration: 220, easing: bezier })
+      withTiming(1.22, { duration: 180, easing: bounceEasing }),
+      withTiming(1, { duration: 220, easing: bounceEasing })
     );
   }, [count, scale]);
 
@@ -219,6 +257,10 @@ function CounterNumber({ count, accent }: { count: number; accent: string }) {
   );
 }
 
+/**
+ * The tappable sushi nigiri. Plays a one-off entrance bounce on mount, an
+ * infinite idle "bob" loop, and shrinks slightly while pressed.
+ */
 function SushiButton({
   onPress,
   top,

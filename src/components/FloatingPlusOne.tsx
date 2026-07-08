@@ -6,6 +6,11 @@ type Props = {
   accent: string;
 };
 
+/**
+ * A "+1" that floats up and fades out once, then is meant to be unmounted by
+ * the parent (it does not remove itself). Horizontal centering is computed
+ * from its own measured width, since percentage transforms aren't supported.
+ */
 export default function FloatingPlusOne({ accent }: Props) {
   const progress = useSharedValue(0);
   const [textWidth, setTextWidth] = useState(0);
@@ -26,7 +31,7 @@ export default function FloatingPlusOne({ accent }: Props) {
 
   return (
     <Animated.Text
-      onLayout={(e) => setTextWidth(e.nativeEvent.layout.width)}
+      onLayout={(layoutEvent) => setTextWidth(layoutEvent.nativeEvent.layout.width)}
       style={[styles.text, { color: accent, marginLeft: -textWidth / 2 }, animatedStyle]}
     >
       +1

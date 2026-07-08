@@ -54,9 +54,16 @@ export const LOCALE: Record<Lang, string> = {
   en: 'en-US',
 };
 
-export function formatSessionDate(ts: number, lang: Lang): string {
+/**
+ * Formats a session's start time for display in the history list.
+ * @param timestamp a `Date.now()`-style epoch milliseconds value.
+ * @param lang the active UI language, used to pick the locale.
+ * @returns a short localized string (e.g. "8 jul, 19:30"), or an empty
+ * string if `timestamp` cannot be formatted.
+ */
+export function formatSessionDate(timestamp: number, lang: Lang): string {
   try {
-    return new Date(ts).toLocaleString(LOCALE[lang], {
+    return new Date(timestamp).toLocaleString(LOCALE[lang], {
       day: 'numeric',
       month: 'short',
       hour: '2-digit',

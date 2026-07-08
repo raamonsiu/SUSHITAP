@@ -12,6 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import SushiCounter from './src/SushiCounter';
 
+/** App root: loads the Fredoka fonts, then renders the single app screen. */
 export default function App() {
   const [fontsLoaded] = useFonts({
     Fredoka_400Regular,

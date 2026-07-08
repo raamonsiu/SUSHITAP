@@ -26,13 +26,20 @@ const DRAWER_ANIM = { duration: 320, easing: Easing.bezier(0.4, 0.9, 0.3, 1) };
 const CLOSE_RATIO_THRESHOLD = 0.3;
 const CLOSE_VELOCITY_THRESHOLD = 500;
 
+/**
+ * Slide-in panel used for both the settings (left) and history (right)
+ * drawers. Animates open/closed on `open` changes and can also be
+ * drag-closed by the user, snapping back open if the drag wasn't decisive.
+ * Pre: `open` reflects the parent's intended visibility. Post: renders
+ * `children` inside the sliding panel; calls `onClose` if a drag closes it.
+ */
 export default function Drawer({ side, open, onClose, widthBase, widthPercent, children }: Props) {
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const drawerWidth = Math.min(widthBase, screenWidth * widthPercent);
   const closedOffset = drawerWidth * 1.1;
   const closedValue = side === 'left' ? -closedOffset : closedOffset;
-  const sign = side === 'left' ? -1 : 1;
+  const closingDirection = side === 'left' ? -1 : 1;
 
   const translateX = useSharedValue(closedValue);
   const dragStartX = useSharedValue(0);
@@ -47,13 +54,18 @@ export default function Drawer({ side, open, onClose, widthBase, widthPercent, c
     .onStart(() => {
       dragStartX.value = translateX.value;
     })
-    .onUpdate((e) => {
-      const next = dragStartX.value + e.translationX;
-      translateX.value = side === 'left' ? Math.min(0, Math.max(closedValue, next)) : Math.max(0, Math.min(closedValue, next));
+    .onUpdate((dragUpdateEvent) => {
+      const nextTranslateX = dragStartX.value + dragUpdateEvent.translationX;
+      translateX.value =
+        side === 'left'
+          ? Math.min(0, Math.max(closedValue, nextTranslateX))
+          : Math.max(0, Math.min(closedValue, nextTranslateX));
     })
-    .onEnd((e) => {
+    .onEnd((dragEndEvent) => {
       const draggedRatio = Math.abs(translateX.value / closedValue);
-      const shouldClose = draggedRatio > CLOSE_RATIO_THRESHOLD || sign * e.velocityX > CLOSE_VELOCITY_THRESHOLD;
+      const shouldClose =
+        draggedRatio > CLOSE_RATIO_THRESHOLD ||
+        closingDirection * dragEndEvent.velocityX > CLOSE_VELOCITY_THRESHOLD;
       if (shouldClose) {
         translateX.value = withTiming(closedValue, DRAWER_ANIM);
         runOnJS(onClose)();

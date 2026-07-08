@@ -15,6 +15,13 @@ export type LoadedState = {
   currentStart: number;
 };
 
+/**
+ * Reads all persisted app state from AsyncStorage in one go.
+ * Pre: none. Post: if no session start timestamp was stored yet, one is
+ * created and persisted so every subsequent call finds a valid value.
+ * @returns the counter, language/flavor preferences, saved sessions, and the
+ * start time of the session currently in progress, all with safe defaults.
+ */
 export async function loadState(): Promise<LoadedState> {
   const [countRaw, prefsRaw, sessionsRaw, startRaw] = await Promise.all([
     AsyncStorage.getItem(KEYS.count),
@@ -41,18 +48,22 @@ export async function loadState(): Promise<LoadedState> {
   };
 }
 
+/** Persists the current session's tally. @param count pieces eaten so far. */
 export function saveCount(count: number) {
   return AsyncStorage.setItem(KEYS.count, String(count));
 }
 
+/** Persists the user's language and sushi flavor choice. @param prefs the preferences to store. */
 export function savePrefs(prefs: Prefs) {
   return AsyncStorage.setItem(KEYS.prefs, JSON.stringify(prefs));
 }
 
+/** Persists the full session history. @param sessions all archived sessions, newest first. */
 export function saveSessions(sessions: Session[]) {
   return AsyncStorage.setItem(KEYS.sessions, JSON.stringify(sessions));
 }
 
+/** Persists when the current (in-progress) session started. @param start a `Date.now()` timestamp. */
 export function saveStart(start: number) {
   return AsyncStorage.setItem(KEYS.start, String(start));
 }

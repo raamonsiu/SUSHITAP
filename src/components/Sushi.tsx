@@ -8,6 +8,13 @@ type Props = {
   size?: number;
 };
 
+/**
+ * The kawaii nigiri illustration, redrawn from the HTML prototype's SVG.
+ * @param topColor the salmon slice's base fill.
+ * @param topHi the lighter highlight band on top of the slice.
+ * @param stripe the color of the two diagonal texture lines on the slice.
+ * @param size rendered width in pixels; height scales to keep the aspect ratio.
+ */
 export default function Sushi({ topColor, topHi, stripe, size = 270 }: Props) {
   const height = (size / 270) * 220;
   return (
