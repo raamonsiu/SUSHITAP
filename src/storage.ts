@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Prefs, Session } from './types';
+import { resolveSystemLang } from './locale';
+import type { Lang, Prefs, Session } from './types';
 
 const KEYS = {
   count: 'sushiCount',
@@ -31,7 +32,8 @@ export async function loadState(): Promise<LoadedState> {
   ]);
 
   const count = parseInt(countRaw ?? '', 10);
-  const prefs: Partial<Prefs> = prefsRaw ? JSON.parse(prefsRaw) : {};
+  // `lang` is the pre-A.1 shape (a single fixed language, no system/manual mode).
+  const storedPrefs: Partial<Prefs> & { lang?: Lang } = prefsRaw ? JSON.parse(prefsRaw) : {};
   const sessions: Session[] = sessionsRaw ? JSON.parse(sessionsRaw) : [];
 
   let currentStart = parseInt(startRaw ?? '', 10);
@@ -40,9 +42,15 @@ export async function loadState(): Promise<LoadedState> {
     await AsyncStorage.setItem(KEYS.start, String(currentStart));
   }
 
+  const prefs: Prefs = storedPrefs.langMode
+    ? { langMode: storedPrefs.langMode, manualLang: storedPrefs.manualLang ?? resolveSystemLang(), flavor: storedPrefs.flavor ?? 'salmon' }
+    : storedPrefs.lang
+      ? { langMode: 'manual', manualLang: storedPrefs.lang, flavor: storedPrefs.flavor ?? 'salmon' }
+      : { langMode: 'system', manualLang: resolveSystemLang(), flavor: storedPrefs.flavor ?? 'salmon' };
+
   return {
     count: isNaN(count) ? 0 : count,
-    prefs: { lang: prefs.lang ?? 'es', flavor: prefs.flavor ?? 'salmon' },
+    prefs,
     sessions,
     currentStart,
   };

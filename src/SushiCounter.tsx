@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -19,9 +19,10 @@ import SettingsDrawer from './components/SettingsDrawer';
 import Sushi from './components/Sushi';
 import TopBar from './components/TopBar';
 import { STRINGS } from './i18n';
+import { resolveSystemLang } from './locale';
 import { loadState, saveCount, savePrefs, saveSessions, saveStart } from './storage';
 import { FLAVORS, NEUTRAL } from './theme';
-import type { Flavor, Lang, Session } from './types';
+import type { Flavor, Lang, LangMode, Session } from './types';
 
 /**
  * Main and only screen of the app. Owns all state (counter, prefs, sessions,
@@ -29,7 +30,8 @@ import type { Flavor, Lang, Session } from './types';
  */
 export default function SushiCounter() {
   const [count, setCount] = useState(0);
-  const [lang, setLang] = useState<Lang>('es');
+  const [langMode, setLangMode] = useState<LangMode>('system');
+  const [manualLang, setManualLang] = useState<Lang>('es');
   const [flavor, setFlavor] = useState<Flavor>('salmon');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentStart, setCurrentStart] = useState<number>(Date.now());
@@ -41,7 +43,8 @@ export default function SushiCounter() {
   useEffect(() => {
     loadState().then((loadedState) => {
       setCount(loadedState.count);
-      setLang(loadedState.prefs.lang);
+      setLangMode(loadedState.prefs.langMode);
+      setManualLang(loadedState.prefs.manualLang);
       setFlavor(loadedState.prefs.flavor);
       setSessions(loadedState.sessions);
       setCurrentStart(loadedState.currentStart);
@@ -49,6 +52,10 @@ export default function SushiCounter() {
     });
   }, []);
 
+  const lang = useMemo(
+    () => (langMode === 'system' ? resolveSystemLang() : manualLang),
+    [langMode, manualLang]
+  );
   const strings = STRINGS[lang];
   const theme = FLAVORS[flavor];
 
@@ -145,13 +152,17 @@ export default function SushiCounter() {
     });
   };
 
-  const onSetLang = (nextLang: Lang) => {
-    setLang(nextLang);
-    savePrefs({ lang: nextLang, flavor });
+  const onSetLangMode = (nextLangMode: LangMode) => {
+    setLangMode(nextLangMode);
+    savePrefs({ langMode: nextLangMode, manualLang, flavor });
+  };
+  const onSetManualLang = (nextManualLang: Lang) => {
+    setManualLang(nextManualLang);
+    savePrefs({ langMode: 'manual', manualLang: nextManualLang, flavor });
   };
   const onSetFlavor = (nextFlavor: Flavor) => {
     setFlavor(nextFlavor);
-    savePrefs({ lang, flavor: nextFlavor });
+    savePrefs({ langMode, manualLang, flavor: nextFlavor });
   };
 
   if (!loaded) return <View style={[styles.root, { backgroundColor: theme.softBg }]} />;
@@ -194,8 +205,11 @@ export default function SushiCounter() {
           onClose={closeMenu}
           accent={theme.accent}
           lang={lang}
+          langMode={langMode}
+          manualLang={manualLang}
           flavor={flavor}
-          onSetLang={onSetLang}
+          onSetLangMode={onSetLangMode}
+          onSetManualLang={onSetManualLang}
           onSetFlavor={onSetFlavor}
         />
       </Drawer>

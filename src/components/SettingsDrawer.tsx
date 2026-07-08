@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { DEV_LINKS, NEUTRAL, RADII, SHADOWS, APP_VERSION } from '../theme';
-import { FLAVOR_LABELS, LANG_LABELS, STRINGS } from '../i18n';
-import type { Flavor, Lang } from '../types';
+import { FLAVOR_LABELS, LANG_NATIVE_NAMES, STRINGS } from '../i18n';
+import { SUPPORTED_LANGS } from '../locale';
+import type { Flavor, Lang, LangMode } from '../types';
 import SuggestionModal from './SuggestionModal';
 
 type Props = {
@@ -11,23 +12,59 @@ type Props = {
   onClose: () => void;
   accent: string;
   lang: Lang;
+  langMode: LangMode;
+  manualLang: Lang;
   flavor: Flavor;
-  onSetLang: (lang: Lang) => void;
+  onSetLangMode: (mode: LangMode) => void;
+  onSetManualLang: (lang: Lang) => void;
   onSetFlavor: (flavor: Flavor) => void;
 };
 
-/** A single rounded choice button used for the language and flavor rows. */
-function Pill({ label, active, accent, onPress }: { label: string; active: boolean; accent: string; onPress: () => void }) {
+/**
+ * A single rounded choice button used for the language, language-mode, and
+ * flavor pickers. `fill` makes it share a row equally; otherwise it sizes to
+ * its label, for use in a wrapping grid (the manual language picker).
+ * `variant: 'outline'` marks it active without the solid fill, used for the
+ * "Otro" pill once a manual language has been picked and its grid is collapsed.
+ */
+function Pill({
+  label,
+  active,
+  accent,
+  onPress,
+  fill = true,
+  variant = 'solid',
+}: {
+  label: string;
+  active: boolean;
+  accent: string;
+  onPress: () => void;
+  fill?: boolean;
+  variant?: 'solid' | 'outline';
+}) {
+  const isSolidActive = active && variant === 'solid';
+  const isOutlineActive = active && variant === 'outline';
+
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.pill,
-        { backgroundColor: active ? accent : NEUTRAL.pillInactiveBg },
-        active && SHADOWS.activePill,
+        fill ? styles.pillFill : styles.pillAuto,
+        isOutlineActive
+          ? [styles.pillOutline, { borderColor: accent }]
+          : { backgroundColor: isSolidActive ? accent : NEUTRAL.pillInactiveBg },
+        isSolidActive && SHADOWS.activePill,
       ]}
     >
-      <Text style={[styles.pillText, { color: active ? '#fff' : NEUTRAL.mutedTextSoft }]}>{label}</Text>
+      <Text
+        style={[
+          styles.pillText,
+          { color: isSolidActive ? '#fff' : isOutlineActive ? accent : NEUTRAL.mutedTextSoft },
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -63,9 +100,38 @@ function BuyMeACoffeeIcon({ color }: { color: string }) {
  * Content of the left drawer: language and sushi flavor pickers (choosing a
  * flavor also drives the app-wide color theme), plus the developer footer.
  */
-export default function SettingsDrawer({ open, onClose, accent, lang, flavor, onSetLang, onSetFlavor }: Props) {
+export default function SettingsDrawer({
+  open,
+  onClose,
+  accent,
+  lang,
+  langMode,
+  manualLang,
+  flavor,
+  onSetLangMode,
+  onSetManualLang,
+  onSetFlavor,
+}: Props) {
   const strings = STRINGS[lang];
   const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
+  const [manualPickerOpen, setManualPickerOpen] = useState(false);
+
+  const handlePressSystem = () => {
+    onSetLangMode('system');
+    setManualPickerOpen(false);
+  };
+  const handlePressOther = () => {
+    if (langMode === 'manual') {
+      setManualPickerOpen((wasOpen) => !wasOpen);
+    } else {
+      onSetLangMode('manual');
+      setManualPickerOpen(true);
+    }
+  };
+  const handlePickManualLang = (langCode: Lang) => {
+    onSetManualLang(langCode);
+    setManualPickerOpen(false);
+  };
 
   return (
     <View style={styles.content} pointerEvents={open ? 'auto' : 'none'}>
@@ -79,16 +145,31 @@ export default function SettingsDrawer({ open, onClose, accent, lang, flavor, on
       <View style={styles.section}>
         <Text style={[styles.sectionLabel, { color: accent }]}>{strings.language}</Text>
         <View style={styles.pillRow}>
-          {(['es', 'en'] as Lang[]).map((langCode) => (
-            <Pill
-              key={langCode}
-              label={LANG_LABELS[lang][langCode]}
-              active={lang === langCode}
-              accent={accent}
-              onPress={() => onSetLang(langCode)}
-            />
-          ))}
+          <Pill label={strings.langModeSystem} active={langMode === 'system'} accent={accent} onPress={handlePressSystem} />
+          <Pill
+            label={strings.langModeOther}
+            active={langMode === 'manual'}
+            accent={accent}
+            variant={langMode === 'manual' && !manualPickerOpen ? 'outline' : 'solid'}
+            onPress={handlePressOther}
+          />
         </View>
+        {langMode === 'manual' && manualPickerOpen ? (
+          <View style={styles.languageGrid}>
+            {SUPPORTED_LANGS.map((langCode) => (
+              <Pill
+                key={langCode}
+                label={LANG_NATIVE_NAMES[langCode]}
+                active={manualLang === langCode}
+                accent={accent}
+                fill={false}
+                onPress={() => handlePickManualLang(langCode)}
+              />
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.languageHint}>→ {LANG_NATIVE_NAMES[langMode === 'system' ? lang : manualLang]}</Text>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -191,15 +272,34 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pill: {
-    flex: 1,
     paddingVertical: 11,
     paddingHorizontal: 6,
     borderRadius: RADII.pill,
     alignItems: 'center',
   },
+  pillFill: {
+    flex: 1,
+  },
+  pillAuto: {
+    paddingHorizontal: 14,
+  },
+  pillOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+  },
   pillText: {
     fontFamily: 'Fredoka_600SemiBold',
     fontSize: 14,
+  },
+  languageHint: {
+    fontFamily: 'Fredoka_500Medium',
+    fontSize: 13,
+    color: NEUTRAL.mutedTextSoft,
+  },
+  languageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   footer: {
     marginTop: 'auto',
