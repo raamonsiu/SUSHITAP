@@ -26,7 +26,7 @@ function Pill({ label, active, accent, onPress }: { label: string; active: boole
         active && SHADOWS.activePill,
       ]}
     >
-      <Text style={[styles.pillText, { color: active ? '#fff' : NEUTRAL.labelMuted3 }]}>{label}</Text>
+      <Text style={[styles.pillText, { color: active ? '#fff' : NEUTRAL.mutedTextSoft }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   },
   closeText: {
     fontSize: 18,
-    color: NEUTRAL.labelMuted3,
+    color: NEUTRAL.mutedTextSoft,
   },
   section: {
     gap: 12,
@@ -179,12 +179,12 @@ const styles = StyleSheet.create({
   footerText: {
     fontFamily: 'Fredoka_600SemiBold',
     fontSize: 13,
-    color: NEUTRAL.labelMuted1,
+    color: NEUTRAL.mutedTextStrong,
   },
   versionText: {
     fontFamily: 'Fredoka_500Medium',
     fontSize: 12,
-    color: NEUTRAL.labelMuted4,
+    color: NEUTRAL.mutedTextFaint,
     marginTop: 3,
   },
   divider: {

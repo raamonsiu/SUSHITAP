@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   },
   closeText: {
     fontSize: 18,
-    color: NEUTRAL.labelMuted3,
+    color: NEUTRAL.mutedTextSoft,
   },
   card: {
     borderRadius: RADII.card,
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontFamily: 'Fredoka_600SemiBold',
     fontSize: 13,
-    color: NEUTRAL.labelMuted3,
+    color: NEUTRAL.mutedTextSoft,
   },
   cardCount: {
     fontFamily: 'Fredoka_700Bold',
@@ -196,11 +196,11 @@ const styles = StyleSheet.create({
   },
   rowUnit: {
     fontSize: 11,
-    color: NEUTRAL.labelMuted5,
+    color: NEUTRAL.mutedTextFaintest,
   },
   empty: {
     textAlign: 'center',
-    color: NEUTRAL.labelMuted4,
+    color: NEUTRAL.mutedTextFaint,
     fontSize: 14,
     paddingVertical: 24,
   },

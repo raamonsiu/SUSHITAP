@@ -164,10 +164,10 @@ export default function SushiCounter() {
       <TopBar accent={theme.accent} onOpenMenu={openMenu} onOpenHistory={openHistory} />
 
       <View style={styles.middle}>
-        <Text style={[styles.eatenLabel, { color: NEUTRAL.labelMuted1 }]}>{strings.eaten}</Text>
+        <Text style={[styles.eatenLabel, { color: NEUTRAL.mutedTextStrong }]}>{strings.eaten}</Text>
 
         <CounterNumber count={count} accent={theme.accent} />
-        <Text style={styles.piecesLabel}>{strings.pieces}</Text>
+        <Text style={[styles.piecesLabel, { color: NEUTRAL.mutedTextMedium }]}>{strings.pieces}</Text>
 
         <View style={styles.sushiBlock}>
           <View style={styles.sushiWrap}>
@@ -176,7 +176,7 @@ export default function SushiCounter() {
             ))}
             <SushiButton onPress={eat} top={theme.top} topHi={theme.topHi} stripe={theme.stripe} />
           </View>
-          <Text style={styles.hint}>{strings.tap}</Text>
+          <Text style={[styles.hint, { color: NEUTRAL.mutedTextStrong }]}>{strings.tap}</Text>
         </View>
       </View>
 
@@ -342,7 +342,6 @@ const styles = StyleSheet.create({
   piecesLabel: {
     fontFamily: 'Fredoka_600SemiBold',
     fontSize: 20,
-    color: '#A98A7A',
     marginTop: 2,
   },
   sushiBlock: {
@@ -357,7 +356,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontFamily: 'Fredoka_500Medium',
     fontSize: 15,
-    color: '#B79A8C',
   },
   overlay: {
     zIndex: 8,
