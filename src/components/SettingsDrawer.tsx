@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { DEV_LINKS, NEUTRAL, RADII, SHADOWS, APP_VERSION } from '../theme';
+import { DEV_LINKS, RADII, SHADOWS, APP_VERSION } from '../theme';
 import { FLAVOR_LABELS, LANG_NATIVE_NAMES, STRINGS } from '../i18n';
 import { SUPPORTED_LANGS } from '../locale';
-import type { Flavor, Lang, LangMode } from '../types';
+import { useAppTheme } from '../ThemeContext';
+import type { Flavor, Lang, LangMode, ThemeMode } from '../types';
 import SuggestionModal from './SuggestionModal';
 
 type Props = {
@@ -14,9 +15,11 @@ type Props = {
   lang: Lang;
   langMode: LangMode;
   manualLang: Lang;
+  themeMode: ThemeMode;
   flavor: Flavor;
   onSetLangMode: (mode: LangMode) => void;
   onSetManualLang: (lang: Lang) => void;
+  onSetThemeMode: (mode: ThemeMode) => void;
   onSetFlavor: (flavor: Flavor) => void;
 };
 
@@ -42,6 +45,7 @@ function Pill({
   fill?: boolean;
   variant?: 'solid' | 'outline';
 }) {
+  const { neutral } = useAppTheme();
   const isSolidActive = active && variant === 'solid';
   const isOutlineActive = active && variant === 'outline';
 
@@ -53,14 +57,14 @@ function Pill({
         fill ? styles.pillFill : styles.pillAuto,
         isOutlineActive
           ? [styles.pillOutline, { borderColor: accent }]
-          : { backgroundColor: isSolidActive ? accent : NEUTRAL.pillInactiveBg },
+          : { backgroundColor: isSolidActive ? accent : neutral.pillInactiveBg },
         isSolidActive && SHADOWS.activePill,
       ]}
     >
       <Text
         style={[
           styles.pillText,
-          { color: isSolidActive ? '#fff' : isOutlineActive ? accent : NEUTRAL.mutedTextSoft },
+          { color: isSolidActive ? '#fff' : isOutlineActive ? accent : neutral.mutedTextSoft },
         ]}
       >
         {label}
@@ -107,12 +111,15 @@ export default function SettingsDrawer({
   lang,
   langMode,
   manualLang,
+  themeMode,
   flavor,
   onSetLangMode,
   onSetManualLang,
+  onSetThemeMode,
   onSetFlavor,
 }: Props) {
   const strings = STRINGS[lang];
+  const { neutral } = useAppTheme();
   const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
   const [manualPickerOpen, setManualPickerOpen] = useState(false);
 
@@ -136,9 +143,13 @@ export default function SettingsDrawer({
   return (
     <View style={styles.content} pointerEvents={open ? 'auto' : 'none'}>
       <View style={styles.header}>
-        <Text style={styles.title}>{strings.settings}</Text>
-        <Pressable onPress={onClose} accessibilityLabel="Cerrar" style={styles.closeBtn}>
-          <Text style={styles.closeText}>✕</Text>
+        <Text style={[styles.title, { color: neutral.textBrown }]}>{strings.settings}</Text>
+        <Pressable
+          onPress={onClose}
+          accessibilityLabel="Cerrar"
+          style={[styles.closeBtn, { backgroundColor: neutral.closeBtnBg }]}
+        >
+          <Text style={[styles.closeText, { color: neutral.mutedTextSoft }]}>✕</Text>
         </Pressable>
       </View>
 
@@ -168,8 +179,31 @@ export default function SettingsDrawer({
             ))}
           </View>
         ) : (
-          <Text style={styles.languageHint}>→ {LANG_NATIVE_NAMES[langMode === 'system' ? lang : manualLang]}</Text>
+          <Text style={[styles.languageHint, { color: neutral.mutedTextSoft }]}>
+            → {LANG_NATIVE_NAMES[langMode === 'system' ? lang : manualLang]}
+          </Text>
         )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.theme}</Text>
+        <View style={styles.pillRow}>
+          {(['system', 'light', 'dark'] as ThemeMode[]).map((themeModeOption) => (
+            <Pill
+              key={themeModeOption}
+              label={
+                themeModeOption === 'system'
+                  ? strings.langModeSystem
+                  : themeModeOption === 'light'
+                    ? strings.themeLight
+                    : strings.themeDark
+              }
+              active={themeMode === themeModeOption}
+              accent={accent}
+              onPress={() => onSetThemeMode(themeModeOption)}
+            />
+          ))}
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -189,34 +223,46 @@ export default function SettingsDrawer({
 
       <View style={styles.section}>
         <Text style={[styles.sectionLabel, { color: accent }]}>{strings.suggestions}</Text>
-        <Pressable style={styles.fullWidthChip} onPress={() => setSuggestionModalOpen(true)}>
-          <Text style={styles.linkText}>{strings.suggestionsCta}</Text>
+        <Pressable
+          style={[styles.fullWidthChip, { backgroundColor: neutral.pillInactiveBg }]}
+          onPress={() => setSuggestionModalOpen(true)}
+        >
+          <Text style={[styles.linkText, { color: neutral.linkText }]}>{strings.suggestionsCta}</Text>
         </Pressable>
       </View>
 
       <View style={styles.footer}>
         <View style={{ alignItems: 'center' }}>
-          <Text style={styles.footerText}>{strings.footer}</Text>
-          <Text style={styles.versionText}>
+          <Text style={[styles.footerText, { color: neutral.mutedTextStrong }]}>{strings.footer}</Text>
+          <Text style={[styles.versionText, { color: neutral.mutedTextFaint }]}>
             {strings.version} {APP_VERSION}
           </Text>
         </View>
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: neutral.divider }]} />
         <View style={{ gap: 11 }}>
           <Text style={[styles.sectionLabel, { color: accent }]}>{strings.about}</Text>
           <View style={styles.pillRow}>
-            <Pressable style={styles.linkChip} onPress={() => Linking.openURL(DEV_LINKS.githubUrl)}>
+            <Pressable
+              style={[styles.linkChip, { backgroundColor: neutral.pillInactiveBg }]}
+              onPress={() => Linking.openURL(DEV_LINKS.githubUrl)}
+            >
               <GithubIcon color={accent} />
-              <Text style={styles.linkText}>GitHub</Text>
+              <Text style={[styles.linkText, { color: neutral.linkText }]}>GitHub</Text>
             </Pressable>
-            <Pressable style={styles.linkChip} onPress={() => Linking.openURL(DEV_LINKS.linkedinUrl)}>
+            <Pressable
+              style={[styles.linkChip, { backgroundColor: neutral.pillInactiveBg }]}
+              onPress={() => Linking.openURL(DEV_LINKS.linkedinUrl)}
+            >
               <LinkedinIcon color={accent} />
-              <Text style={styles.linkText}>LinkedIn</Text>
+              <Text style={[styles.linkText, { color: neutral.linkText }]}>LinkedIn</Text>
             </Pressable>
           </View>
-          <Pressable style={styles.fullWidthChip} onPress={() => Linking.openURL(DEV_LINKS.buyMeACoffeeUrl)}>
+          <Pressable
+            style={[styles.fullWidthChip, { backgroundColor: neutral.pillInactiveBg }]}
+            onPress={() => Linking.openURL(DEV_LINKS.buyMeACoffeeUrl)}
+          >
             <BuyMeACoffeeIcon color={accent} />
-            <Text style={styles.linkText}>Buy me a coffee</Text>
+            <Text style={[styles.linkText, { color: neutral.linkText }]}>Buy me a coffee</Text>
           </Pressable>
         </View>
       </View>
@@ -244,19 +290,16 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Fredoka_700Bold',
     fontSize: 24,
-    color: NEUTRAL.textBrown,
   },
   closeBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: NEUTRAL.closeBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeText: {
     fontSize: 18,
-    color: NEUTRAL.mutedTextSoft,
   },
   section: {
     gap: 12,
@@ -294,7 +337,6 @@ const styles = StyleSheet.create({
   languageHint: {
     fontFamily: 'Fredoka_500Medium',
     fontSize: 13,
-    color: NEUTRAL.mutedTextSoft,
   },
   languageGrid: {
     flexDirection: 'row',
@@ -308,17 +350,14 @@ const styles = StyleSheet.create({
   footerText: {
     fontFamily: 'Fredoka_600SemiBold',
     fontSize: 13,
-    color: NEUTRAL.mutedTextStrong,
   },
   versionText: {
     fontFamily: 'Fredoka_500Medium',
     fontSize: 12,
-    color: NEUTRAL.mutedTextFaint,
     marginTop: 3,
   },
   divider: {
     height: 1,
-    backgroundColor: NEUTRAL.divider,
   },
   linkChip: {
     flex: 1,
@@ -329,7 +368,6 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 6,
     borderRadius: RADII.pill,
-    backgroundColor: NEUTRAL.pillInactiveBg,
   },
   fullWidthChip: {
     width: '100%',
@@ -340,11 +378,9 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 6,
     borderRadius: RADII.pill,
-    backgroundColor: NEUTRAL.pillInactiveBg,
   },
   linkText: {
     fontFamily: 'Fredoka_600SemiBold',
     fontSize: 14,
-    color: NEUTRAL.linkText,
   },
 });

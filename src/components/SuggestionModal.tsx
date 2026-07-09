@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Linking, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { STRINGS } from '../i18n';
-import { DEV_LINKS, NEUTRAL, RADII, SHADOWS } from '../theme';
+import { DEV_LINKS, RADII, SHADOWS } from '../theme';
+import { useAppTheme } from '../ThemeContext';
 import type { Lang } from '../types';
 
 type Props = {
@@ -19,6 +20,7 @@ type Props = {
  */
 export default function SuggestionModal({ visible, onClose, accent, lang }: Props) {
   const strings = STRINGS[lang];
+  const { neutral } = useAppTheme();
   const [text, setText] = useState('');
   const canSend = text.trim().length > 0;
 
@@ -37,18 +39,21 @@ export default function SuggestionModal({ visible, onClose, accent, lang }: Prop
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
-      <Pressable style={styles.scrim} onPress={handleClose}>
-        <Pressable style={[styles.card, SHADOWS.drawer]} onPress={() => {}}>
-          <Text style={styles.title}>{strings.suggestions}</Text>
-          <Text style={styles.hint}>{strings.suggestionsHint}</Text>
+      <Pressable style={[styles.scrim, { backgroundColor: neutral.overlay }]} onPress={handleClose}>
+        <Pressable
+          style={[styles.card, { backgroundColor: neutral.drawerBg }, SHADOWS.drawer]}
+          onPress={() => {}}
+        >
+          <Text style={[styles.title, { color: neutral.textBrown }]}>{strings.suggestions}</Text>
+          <Text style={[styles.hint, { color: neutral.mutedTextSoft }]}>{strings.suggestionsHint}</Text>
 
           <TextInput
             value={text}
             onChangeText={setText}
             placeholder={strings.suggestionsPlaceholder}
-            placeholderTextColor={NEUTRAL.mutedTextFaint}
+            placeholderTextColor={neutral.mutedTextFaint}
             multiline
-            style={styles.input}
+            style={[styles.input, { backgroundColor: neutral.pillInactiveBg, color: neutral.textBrown }]}
           />
 
           <View style={styles.buttonRow}>
@@ -60,10 +65,10 @@ export default function SuggestionModal({ visible, onClose, accent, lang }: Prop
               disabled={!canSend}
               style={[
                 styles.sendBtn,
-                canSend ? { backgroundColor: accent, ...SHADOWS.activePill } : { backgroundColor: NEUTRAL.disabledBg },
+                canSend ? { backgroundColor: accent, ...SHADOWS.activePill } : { backgroundColor: neutral.disabledBg },
               ]}
             >
-              <Text style={[styles.sendText, { color: canSend ? '#fff' : NEUTRAL.disabledText }]}>
+              <Text style={[styles.sendText, { color: canSend ? '#fff' : neutral.disabledText }]}>
                 {strings.send}
               </Text>
             </Pressable>
@@ -77,7 +82,6 @@ export default function SuggestionModal({ visible, onClose, accent, lang }: Prop
 const styles = StyleSheet.create({
   scrim: {
     flex: 1,
-    backgroundColor: NEUTRAL.overlay,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -85,7 +89,6 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 360,
-    backgroundColor: NEUTRAL.drawerBg,
     borderRadius: RADII.card,
     padding: 22,
     gap: 14,
@@ -93,18 +96,14 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Fredoka_700Bold',
     fontSize: 22,
-    color: NEUTRAL.textBrown,
   },
   hint: {
     fontFamily: 'Fredoka_500Medium',
     fontSize: 14,
-    color: NEUTRAL.mutedTextSoft,
   },
   input: {
     minHeight: 110,
     borderRadius: RADII.pill,
-    backgroundColor: NEUTRAL.pillInactiveBg,
-    color: NEUTRAL.textBrown,
     fontFamily: 'Fredoka_500Medium',
     fontSize: 14,
     padding: 14,

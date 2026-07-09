@@ -1,18 +1,20 @@
 import type { Flavor } from './types';
 
-export const FLAVORS: Record<
-  Flavor,
-  {
-    accent: string;
-    accentSoft: string;
-    softBg: string;
-    bg: [string, string, string];
-    blobs: [string, string, string];
-    top: string;
-    topHi: string;
-    stripe: string;
-  }
-> = {
+/** The resolved color scheme actually in effect (a ThemeMode of 'system' resolves to one of these). */
+export type Scheme = 'light' | 'dark';
+
+export type FlavorTheme = {
+  accent: string;
+  accentSoft: string;
+  softBg: string;
+  bg: [string, string, string];
+  blobs: [string, string, string];
+  top: string;
+  topHi: string;
+  stripe: string;
+};
+
+export const FLAVORS: Record<Flavor, FlavorTheme> = {
   salmon: {
     accent: '#F0805A',
     accentSoft: '#FFD9C4',
@@ -45,6 +47,44 @@ export const FLAVORS: Record<
   },
 };
 
+/**
+ * Dark variants of each flavor theme. Accents and the sushi's own colors are
+ * kept identical to light mode (they pop nicely on dark); backgrounds, blobs
+ * and soft fills shift to warm dark browns tinted by the flavor.
+ */
+export const FLAVORS_DARK: Record<Flavor, FlavorTheme> = {
+  salmon: {
+    accent: '#F0805A',
+    accentSoft: '#5A3A2C',
+    softBg: '#3A2A24',
+    bg: ['#2E211E', '#332028', '#37202E'],
+    blobs: ['#2C4A40', '#3A3054', '#2A4258'],
+    top: '#FF9166',
+    topHi: '#FFC3A3',
+    stripe: '#FFE0CE',
+  },
+  tuna: {
+    accent: '#E15C6E',
+    accentSoft: '#59303A',
+    softBg: '#3A242A',
+    bg: ['#301F24', '#351E2A', '#3A1E30'],
+    blobs: ['#4A332C', '#3A3054', '#2A4258'],
+    top: '#E76A7A',
+    topHi: '#F3A2AC',
+    stripe: '#FFD3DA',
+  },
+  egg: {
+    accent: '#D99A18',
+    accentSoft: '#4E401F',
+    softBg: '#3A3222',
+    bg: ['#2E2818', '#332B18', '#38301B'],
+    blobs: ['#2C4A40', '#4A332C', '#2A4258'],
+    top: '#FFCF5C',
+    topHi: '#FFE3A0',
+    stripe: '#FFF0C7',
+  },
+};
+
 export const NEUTRAL = {
   textBrown: '#5A4A42',
   mutedTextStrong: '#B79A8C',
@@ -53,6 +93,7 @@ export const NEUTRAL = {
   mutedTextFaint: '#C6B4A9',
   mutedTextFaintest: '#B0A096',
   drawerBg: '#FFFCFA',
+  drawerHandle: 'rgba(154,138,128,0.35)',
   closeBtnBg: '#F4ECE7',
   pillInactiveBg: '#F3ECE7',
   linkText: '#7A6A60',
@@ -64,12 +105,46 @@ export const NEUTRAL = {
   eyes: '#43302B',
   cheeks: '#FF9BB0',
   overlay: 'rgba(60,40,35,0.34)',
+  topButtonBg: 'rgba(255,255,255,0.85)',
+};
+
+export type NeutralPalette = typeof NEUTRAL;
+
+/** Dark counterpart of NEUTRAL — same keys, warm dark browns and cream text. */
+export const NEUTRAL_DARK: NeutralPalette = {
+  textBrown: '#F0E4DC',
+  mutedTextStrong: '#C7AB9C',
+  mutedTextMedium: '#B89C8C',
+  mutedTextSoft: '#A68C7E',
+  mutedTextFaint: '#8B7869',
+  mutedTextFaintest: '#7E6C60',
+  drawerBg: '#2B2220',
+  drawerHandle: 'rgba(210,190,178,0.30)',
+  closeBtnBg: '#3D322D',
+  pillInactiveBg: '#3D322D',
+  linkText: '#CDB6A8',
+  sessionRowBg: '#372D28',
+  divider: '#443830',
+  disabledBg: '#3A302B',
+  disabledText: '#6E5D53',
+  rice: '#FFFDF9',
+  eyes: '#43302B',
+  cheeks: '#FF9BB0',
+  overlay: 'rgba(0,0,0,0.55)',
+  topButtonBg: 'rgba(58,46,42,0.85)',
 };
 
 /** Colors used for the swipe-to-delete affordance on history sessions. */
 export const DANGER = {
   text: '#C75450',
   soft: '#FBE4E2',
+};
+
+export type DangerPalette = typeof DANGER;
+
+export const DANGER_DARK: DangerPalette = {
+  text: '#E58F8A',
+  soft: '#4A2B28',
 };
 
 export const RADII = {

@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useColorScheme, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -24,8 +25,9 @@ import TopBar from './components/TopBar';
 import { STRINGS } from './i18n';
 import { resolveSystemLang } from './locale';
 import { loadState, saveCount, savePrefs, saveSessions, saveStart } from './storage';
-import { FLAVORS, NEUTRAL } from './theme';
-import type { Flavor, Lang, LangMode, Session } from './types';
+import { buildAppTheme, ThemeProvider, useAppTheme } from './ThemeContext';
+import type { Scheme } from './theme';
+import type { Flavor, Lang, LangMode, Session, ThemeMode } from './types';
 
 /** Horizontal breathing room the floating "+1" keeps from the screen edges. */
 const FLOATER_EDGE_MARGIN = 36;
@@ -36,9 +38,11 @@ const FLOATER_EDGE_MARGIN = 36;
  */
 export default function SushiCounter() {
   const { width: screenWidth } = useWindowDimensions();
+  const systemScheme = useColorScheme();
   const [count, setCount] = useState(0);
   const [langMode, setLangMode] = useState<LangMode>('system');
   const [manualLang, setManualLang] = useState<Lang>('es');
+  const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [flavor, setFlavor] = useState<Flavor>('salmon');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentStart, setCurrentStart] = useState<number>(Date.now());
@@ -52,6 +56,7 @@ export default function SushiCounter() {
       setCount(loadedState.count);
       setLangMode(loadedState.prefs.langMode);
       setManualLang(loadedState.prefs.manualLang);
+      setThemeMode(loadedState.prefs.themeMode);
       setFlavor(loadedState.prefs.flavor);
       setSessions(loadedState.sessions);
       setCurrentStart(loadedState.currentStart);
@@ -64,7 +69,12 @@ export default function SushiCounter() {
     [langMode, manualLang]
   );
   const strings = STRINGS[lang];
-  const theme = FLAVORS[flavor];
+
+  const scheme: Scheme =
+    themeMode === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : themeMode;
+  const appTheme = useMemo(() => buildAppTheme(flavor, scheme), [flavor, scheme]);
+  const theme = appTheme.flavor;
+  const neutral = appTheme.neutral;
 
   /**
    * Handles a tap on the sushi. Increments the counter with a soft haptic
@@ -191,31 +201,37 @@ export default function SushiCounter() {
 
   const onSetLangMode = (nextLangMode: LangMode) => {
     setLangMode(nextLangMode);
-    savePrefs({ langMode: nextLangMode, manualLang, flavor });
+    savePrefs({ langMode: nextLangMode, manualLang, themeMode, flavor });
   };
   const onSetManualLang = (nextManualLang: Lang) => {
     setManualLang(nextManualLang);
-    savePrefs({ langMode: 'manual', manualLang: nextManualLang, flavor });
+    savePrefs({ langMode: 'manual', manualLang: nextManualLang, themeMode, flavor });
+  };
+  const onSetThemeMode = (nextThemeMode: ThemeMode) => {
+    setThemeMode(nextThemeMode);
+    savePrefs({ langMode, manualLang, themeMode: nextThemeMode, flavor });
   };
   const onSetFlavor = (nextFlavor: Flavor) => {
     setFlavor(nextFlavor);
-    savePrefs({ langMode, manualLang, flavor: nextFlavor });
+    savePrefs({ langMode, manualLang, themeMode, flavor: nextFlavor });
   };
 
   if (!loaded) return <View style={[styles.root, { backgroundColor: theme.softBg }]} />;
 
   return (
+    <ThemeProvider value={appTheme}>
     <View style={styles.root}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Background colors={theme.bg} />
       <Blobs colors={theme.blobs} />
 
       <TopBar accent={theme.accent} onOpenMenu={openMenu} onOpenHistory={openHistory} />
 
       <View style={styles.middle}>
-        <Text style={[styles.eatenLabel, { color: NEUTRAL.mutedTextStrong }]}>{strings.eaten}</Text>
+        <Text style={[styles.eatenLabel, { color: neutral.mutedTextStrong }]}>{strings.eaten}</Text>
 
         <CounterNumber count={count} accent={theme.accent} />
-        <Text style={[styles.piecesLabel, { color: NEUTRAL.mutedTextMedium }]}>{strings.pieces}</Text>
+        <Text style={[styles.piecesLabel, { color: neutral.mutedTextMedium }]}>{strings.pieces}</Text>
 
         <View style={styles.sushiBlock}>
           <View style={[styles.sushiWrap, { width: screenWidth }]}>
@@ -230,8 +246,8 @@ export default function SushiCounter() {
               stripe={theme.stripe}
             />
           </View>
-          <Text style={[styles.hint, { color: NEUTRAL.mutedTextStrong }]}>{strings.tap}</Text>
-          <Text style={[styles.hintSmall, { color: NEUTRAL.mutedTextFaint }]}>{strings.swipeDownHint}</Text>
+          <Text style={[styles.hint, { color: neutral.mutedTextStrong }]}>{strings.tap}</Text>
+          <Text style={[styles.hintSmall, { color: neutral.mutedTextFaint }]}>{strings.swipeDownHint}</Text>
         </View>
       </View>
 
@@ -251,9 +267,11 @@ export default function SushiCounter() {
           lang={lang}
           langMode={langMode}
           manualLang={manualLang}
+          themeMode={themeMode}
           flavor={flavor}
           onSetLangMode={onSetLangMode}
           onSetManualLang={onSetManualLang}
+          onSetThemeMode={onSetThemeMode}
           onSetFlavor={onSetFlavor}
         />
       </Drawer>
@@ -273,6 +291,7 @@ export default function SushiCounter() {
         />
       </Drawer>
     </View>
+    </ThemeProvider>
   );
 }
 
@@ -281,12 +300,13 @@ export default function SushiCounter() {
  * and closes any open drawer when tapped (handled by the parent Pressable).
  */
 function OverlayFade({ visible }: { visible: boolean }) {
+  const { neutral } = useAppTheme();
   const opacity = useSharedValue(0);
   useEffect(() => {
     opacity.value = withTiming(visible ? 1 : 0, { duration: 280, easing: Easing.ease });
   }, [visible, opacity]);
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  return <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: NEUTRAL.overlay }, style]} />;
+  return <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: neutral.overlay }, style]} />;
 }
 
 /**

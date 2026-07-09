@@ -9,7 +9,8 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { NEUTRAL, RADII, SHADOWS } from '../theme';
+import { RADII, SHADOWS } from '../theme';
+import { useAppTheme } from '../ThemeContext';
 
 type Side = 'left' | 'right';
 
@@ -36,6 +37,7 @@ const CLOSE_VELOCITY_THRESHOLD = 500;
 export default function Drawer({ side, open, onClose, widthBase, widthPercent, children }: Props) {
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const { neutral } = useAppTheme();
   const drawerWidth = Math.min(widthBase, screenWidth * widthPercent);
   const closedOffset = drawerWidth * 1.1;
   const closedValue = side === 'left' ? -closedOffset : closedOffset;
@@ -92,14 +94,14 @@ export default function Drawer({ side, open, onClose, widthBase, widthPercent, c
         pointerEvents={open ? 'auto' : 'none'}
         style={[
           styles.base,
-          { width: drawerWidth, paddingTop: 26 + insets.top },
+          { width: drawerWidth, paddingTop: 26 + insets.top, backgroundColor: neutral.drawerBg },
           positionStyle,
           radiusStyle,
           SHADOWS.drawer,
           animatedStyle,
         ]}
       >
-        <View style={[styles.handle, handleStyle]} />
+        <View style={[styles.handle, handleStyle, { backgroundColor: neutral.drawerHandle }]} />
         {children}
       </Animated.View>
     </GestureDetector>
@@ -111,7 +113,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     bottom: 0,
-    backgroundColor: NEUTRAL.drawerBg,
     paddingHorizontal: 22,
     paddingBottom: 26,
     zIndex: 9,
@@ -123,6 +124,5 @@ const styles = StyleSheet.create({
     width: 5,
     height: 80,
     borderRadius: 3,
-    backgroundColor: 'rgba(154,138,128,0.35)',
   },
 });

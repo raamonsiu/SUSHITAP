@@ -12,7 +12,8 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { DANGER, NEUTRAL, RADII, SHADOWS } from '../theme';
+import { RADII, SHADOWS } from '../theme';
+import { useAppTheme } from '../ThemeContext';
 import { STRINGS, formatSessionDate } from '../i18n';
 import type { Lang, Session } from '../types';
 
@@ -76,6 +77,7 @@ function SessionRow({
   onDelete: (sessionId: number) => void;
 }) {
   const strings = STRINGS[lang];
+  const { neutral, danger } = useAppTheme();
   const [hintMounted, setHintMounted] = useState(false);
   // 0 = flap fully hidden behind the row, 1 = flap slid out and peeking below it.
   const hintProgress = useSharedValue(0);
@@ -166,7 +168,7 @@ function SessionRow({
     backgroundColor: interpolateColor(
       translateX.value,
       [0, SWIPE_DELETE_THRESHOLD],
-      [NEUTRAL.sessionRowBg, DANGER.soft]
+      [neutral.sessionRowBg, danger.soft]
     ),
   }));
 
@@ -206,25 +208,25 @@ function SessionRow({
     >
       <View style={styles.rowArea}>
         {hintMounted && (
-          <Animated.View style={[styles.hintFlap, hintFlapStyle]}>
-            <Text style={styles.hintFlapText}>{strings.swipeToDelete}</Text>
+          <Animated.View style={[styles.hintFlap, { backgroundColor: danger.soft }, hintFlapStyle]}>
+            <Text style={[styles.hintFlapText, { color: danger.text }]}>{strings.swipeToDelete}</Text>
           </Animated.View>
         )}
 
         <View style={styles.swipeContainer}>
-          <View style={styles.swipeBackground}>
+          <View style={[styles.swipeBackground, { backgroundColor: danger.soft }]}>
             <Animated.View style={trashRevealStyle}>
-              <TrashIcon color={DANGER.text} size={22} />
+              <TrashIcon color={danger.text} size={22} />
             </Animated.View>
           </View>
 
           <GestureDetector gesture={pan}>
             <Animated.View style={[styles.row, rowStyle]}>
-              <Text style={styles.rowWhen}>{formatSessionDate(session.start, lang)}</Text>
+              <Text style={[styles.rowWhen, { color: neutral.linkText }]}>{formatSessionDate(session.start, lang)}</Text>
               <View style={styles.rowRight}>
                 <View style={styles.rowTotalGroup}>
                   <Text style={[styles.rowTotal, { color: accent }]}>{session.total}</Text>
-                  <Text style={styles.rowUnit}>{strings.piecesShort}</Text>
+                  <Text style={[styles.rowUnit, { color: neutral.mutedTextFaintest }]}>{strings.piecesShort}</Text>
                 </View>
                 <Pressable
                   onPress={showSwipeHint}
@@ -232,7 +234,7 @@ function SessionRow({
                   hitSlop={8}
                   style={styles.deleteBtn}
                 >
-                  <TrashIcon color={NEUTRAL.mutedTextFaintest} size={20} />
+                  <TrashIcon color={neutral.mutedTextFaintest} size={20} />
                 </Pressable>
               </View>
             </Animated.View>
@@ -262,20 +264,25 @@ export default function HistoryDrawer({
   onDeleteSession,
 }: Props) {
   const strings = STRINGS[lang];
+  const { neutral } = useAppTheme();
   const canFinalize = count > 0;
 
   return (
     <View style={styles.content} pointerEvents={open ? 'auto' : 'none'}>
       <View style={styles.header}>
-        <Text style={styles.title}>{strings.history}</Text>
-        <Pressable onPress={onClose} accessibilityLabel="Cerrar" style={styles.closeBtn}>
-          <Text style={styles.closeText}>✕</Text>
+        <Text style={[styles.title, { color: neutral.textBrown }]}>{strings.history}</Text>
+        <Pressable
+          onPress={onClose}
+          accessibilityLabel="Cerrar"
+          style={[styles.closeBtn, { backgroundColor: neutral.closeBtnBg }]}
+        >
+          <Text style={[styles.closeText, { color: neutral.mutedTextSoft }]}>✕</Text>
         </Pressable>
       </View>
 
       <View style={[styles.card, { backgroundColor: softBg }]}>
         <View style={styles.cardRow}>
-          <Text style={styles.cardLabel}>{strings.current}</Text>
+          <Text style={[styles.cardLabel, { color: neutral.mutedTextSoft }]}>{strings.current}</Text>
           <Text style={[styles.cardCount, { color: accent }]}>{count}</Text>
         </View>
 
@@ -286,10 +293,10 @@ export default function HistoryDrawer({
             styles.finalizeBtn,
             canFinalize
               ? { backgroundColor: accent, ...SHADOWS.activePill }
-              : { backgroundColor: NEUTRAL.disabledBg },
+              : { backgroundColor: neutral.disabledBg },
           ]}
         >
-          <Text style={[styles.finalizeText, { color: canFinalize ? '#fff' : NEUTRAL.disabledText }]}>
+          <Text style={[styles.finalizeText, { color: canFinalize ? '#fff' : neutral.disabledText }]}>
             {strings.finalize}
           </Text>
         </Pressable>
@@ -308,7 +315,7 @@ export default function HistoryDrawer({
             ))}
           </ScrollView>
         ) : (
-          <Text style={styles.empty}>{strings.empty}</Text>
+          <Text style={[styles.empty, { color: neutral.mutedTextFaint }]}>{strings.empty}</Text>
         )}
       </View>
     </View>
@@ -328,19 +335,16 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Fredoka_700Bold',
     fontSize: 24,
-    color: NEUTRAL.textBrown,
   },
   closeBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: NEUTRAL.closeBtnBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeText: {
     fontSize: 18,
-    color: NEUTRAL.mutedTextSoft,
   },
   card: {
     borderRadius: RADII.card,
@@ -355,7 +359,6 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontFamily: 'Fredoka_600SemiBold',
     fontSize: 13,
-    color: NEUTRAL.mutedTextSoft,
   },
   cardCount: {
     fontFamily: 'Fredoka_700Bold',
@@ -414,7 +417,6 @@ const styles = StyleSheet.create({
     width: 70,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: DANGER.soft,
   },
   row: {
     flexDirection: 'row',
@@ -427,7 +429,6 @@ const styles = StyleSheet.create({
   rowWhen: {
     fontFamily: 'Fredoka_500Medium',
     fontSize: 14,
-    color: NEUTRAL.linkText,
   },
   rowRight: {
     flexDirection: 'row',
@@ -445,7 +446,6 @@ const styles = StyleSheet.create({
   },
   rowUnit: {
     fontSize: 11,
-    color: NEUTRAL.mutedTextFaintest,
   },
   deleteBtn: {
     padding: 4,
@@ -456,7 +456,6 @@ const styles = StyleSheet.create({
     right: 0,
     top: '100%',
     marginTop: -HINT_FLAP_OVERLAP,
-    backgroundColor: DANGER.soft,
     borderRadius: RADII.pill,
     paddingTop: HINT_FLAP_OVERLAP + 8,
     paddingBottom: 9,
@@ -466,11 +465,9 @@ const styles = StyleSheet.create({
   hintFlapText: {
     fontFamily: 'Fredoka_600SemiBold',
     fontSize: 12,
-    color: DANGER.text,
   },
   empty: {
     textAlign: 'center',
-    color: NEUTRAL.mutedTextFaint,
     fontSize: 14,
     paddingVertical: 24,
   },

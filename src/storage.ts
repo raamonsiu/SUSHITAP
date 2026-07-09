@@ -42,11 +42,13 @@ export async function loadState(): Promise<LoadedState> {
     await AsyncStorage.setItem(KEYS.start, String(currentStart));
   }
 
+  const themeMode = storedPrefs.themeMode ?? 'system';
+  const flavor = storedPrefs.flavor ?? 'salmon';
   const prefs: Prefs = storedPrefs.langMode
-    ? { langMode: storedPrefs.langMode, manualLang: storedPrefs.manualLang ?? resolveSystemLang(), flavor: storedPrefs.flavor ?? 'salmon' }
+    ? { langMode: storedPrefs.langMode, manualLang: storedPrefs.manualLang ?? resolveSystemLang(), themeMode, flavor }
     : storedPrefs.lang
-      ? { langMode: 'manual', manualLang: storedPrefs.lang, flavor: storedPrefs.flavor ?? 'salmon' }
-      : { langMode: 'system', manualLang: resolveSystemLang(), flavor: storedPrefs.flavor ?? 'salmon' };
+      ? { langMode: 'manual', manualLang: storedPrefs.lang, themeMode, flavor }
+      : { langMode: 'system', manualLang: resolveSystemLang(), themeMode, flavor };
 
   return {
     count: isNaN(count) ? 0 : count,

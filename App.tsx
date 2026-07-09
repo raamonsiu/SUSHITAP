@@ -5,7 +5,6 @@ import {
   Fredoka_700Bold,
   useFonts,
 } from '@expo-google-fonts/fredoka';
-import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -29,7 +28,6 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SushiCounter />
-        <StatusBar style="dark" />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

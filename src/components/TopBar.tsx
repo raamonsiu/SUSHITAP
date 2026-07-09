@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { RADII, SHADOWS } from '../theme';
+import { useAppTheme } from '../ThemeContext';
 
 type Props = {
   accent: string;
@@ -15,6 +16,8 @@ const BUTTON_SIZE = 60;
 /** Top row with the menu (settings) and history buttons, pinned below the status bar. */
 export default function TopBar({ accent, onOpenMenu, onOpenHistory }: Props) {
   const insets = useSafeAreaInsets();
+  const { neutral } = useAppTheme();
+  const buttonBg = { backgroundColor: neutral.topButtonBg };
 
   return (
     <View style={[styles.row, { paddingTop: insets.top + 16 }]}>
@@ -22,7 +25,7 @@ export default function TopBar({ accent, onOpenMenu, onOpenHistory }: Props) {
         onPress={onOpenMenu}
         accessibilityLabel="Menú"
         hitSlop={8}
-        style={({ pressed }) => [styles.button, SHADOWS.topButton, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.button, buttonBg, SHADOWS.topButton, pressed && styles.pressed]}
       >
         <View style={[styles.bar, { backgroundColor: accent }]} />
         <View style={[styles.bar, { backgroundColor: accent }]} />
@@ -33,7 +36,7 @@ export default function TopBar({ accent, onOpenMenu, onOpenHistory }: Props) {
         onPress={onOpenHistory}
         accessibilityLabel="Historial"
         hitSlop={8}
-        style={({ pressed }) => [styles.button, SHADOWS.topButton, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.button, buttonBg, SHADOWS.topButton, pressed && styles.pressed]}
       >
         <Svg
           width={29}
@@ -69,7 +72,6 @@ const styles = StyleSheet.create({
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
     borderRadius: RADII.topButton + 2,
-    backgroundColor: 'rgba(255,255,255,0.85)',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
