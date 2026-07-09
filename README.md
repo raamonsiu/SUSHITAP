@@ -10,15 +10,27 @@
   <a href="https://github.com/raamonsiu/SUSHITAP/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/raamonsiu/SUSHITAP?style=social"></a>
 </p>
 
-SUSHITAP es una app pequeña y sencilla para llevar la cuenta de las piezas de sushi que te comes en cada sesión. La pantalla principal muestra un contador grande y un nigiri animado: cada vez que tocas el sushi, el contador suma una pieza más, con una vibración suave y un pequeño "+1" que flota hacia arriba como confirmación. Si te has pasado contando, deslizar el dedo hacia abajo sobre el sushi resta una pieza.
+## Overview
 
-En la esquina superior izquierda hay un botón que abre el menú de ajustes. Desde ahí se elige el idioma (español, inglés, catalán, francés, italiano, alemán o japonés, con la opción de seguir automáticamente el del sistema), el tema claro u oscuro (también con modo automático según el ajuste del teléfono) y el tipo de pieza de sushi (salmón, atún o tamago). Cambiar la pieza no es solo estético: cada sabor tiene su propia paleta de color, con variante clara y oscura, así que el fondo, los acentos y el propio dibujo del sushi cambian según la elección. El mismo menú incluye una sección de sugerencias que abre tu app de correo con el mensaje ya preparado, y los enlaces del desarrollador.
+SUSHITAP is a small, single-purpose app for keeping count of how many pieces of sushi you eat during a sitting. The main screen shows a large counter and an animated nigiri: tapping it adds one piece, with a soft haptic tap and a "+1" that floats up and fades out at a random horizontal position. Swiping down on the sushi removes a piece, for when you've miscounted.
 
-En la esquina superior derecha hay un botón que abre el historial. Ahí se ve la sesión actual en curso, con un botón para finalizarla (que la guarda en el historial y pone el contador a cero) y otro para empezar una sesión nueva. Debajo aparece la lista de sesiones anteriores, con la fecha y el total de piezas de cada una; cualquier sesión guardada se puede eliminar deslizándola hacia la izquierda. Ambos menús se abren deslizándose desde su lado correspondiente y se pueden cerrar tocando fuera, con el botón de cerrar, con el botón atrás del teléfono o arrastrándolos hacia el borde.
+## Features
 
-Todo lo que eliges (idioma, tema, sabor, sesión en curso e historial) se guarda en el propio dispositivo, así que se mantiene igual aunque cierres la app o reinicies el teléfono.
+### Counting and sessions
 
-SUSHITAP no necesita conexión a internet ni cuenta de ningún tipo: no hay registro, ni inicio de sesión, ni servidor detrás. Todo el almacenamiento es local, en el propio teléfono (mediante AsyncStorage), así que los datos no salen del dispositivo ni se sincronizan con ningún sitio. Si desinstalas la app o borras sus datos, el historial y las preferencias se pierden, ya que no hay copia en ningún otro lugar.
+Every tap grows the current session. From the history panel you can finalize the current session (saving it and resetting the counter to zero) or start a new one. Past sessions are listed with their date and total piece count, and any of them can be removed by swiping it to the left.
+
+### Settings
+
+The settings drawer lets you pick the language (Spanish, English, Catalan, French, Italian, German or Japanese, with an option to follow the system language automatically), the color scheme (light, dark, or automatic based on the phone's setting), and the sushi piece (salmon, tuna or tamago). Changing the piece is more than cosmetic: each flavor has its own color palette, in both light and dark variants, so the background, accents and the sushi illustration itself change with the choice. The same drawer includes a suggestions section that opens your email app with a message already drafted, plus links to the developer.
+
+### Navigation
+
+The settings drawer opens from the top-left button, the history drawer from the top-right one. Both slide in from their respective side and can be closed by tapping outside, using the close button, the phone's back button, or by dragging them back to the edge.
+
+## Privacy and data
+
+SUSHITAP does not require an internet connection or any kind of account: there is no sign-up, no login, and no backend server. Every piece of data — language, theme, flavor, the current session and the full history — is stored locally on the device using AsyncStorage, and never leaves it or gets synced anywhere. Uninstalling the app or clearing its data erases the history and preferences for good, since there is no copy anywhere else.
 
 ## Star History
 
@@ -26,6 +38,6 @@ SUSHITAP no necesita conexión a internet ni cuenta de ningún tipo: no hay regi
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=raamonsiu/SUSHITAP&type=Date&theme=dark">
     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=raamonsiu/SUSHITAP&type=Date">
-    <img alt="Gráfico de evolución de estrellas del repositorio" src="https://api.star-history.com/svg?repos=raamonsiu/SUSHITAP&type=Date">
+    <img alt="Repository star history chart" src="https://api.star-history.com/svg?repos=raamonsiu/SUSHITAP&type=Date">
   </picture>
 </a>
