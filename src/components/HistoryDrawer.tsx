@@ -1,6 +1,18 @@
-import React from 'react';
+import * as Haptics from 'expo-haptics';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { NEUTRAL, RADII, SHADOWS } from '../theme';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Svg, { Path } from 'react-native-svg';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  interpolateColor,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { DANGER, NEUTRAL, RADII, SHADOWS } from '../theme';
 import { STRINGS, formatSessionDate } from '../i18n';
 import type { Lang, Session } from '../types';
 
@@ -14,7 +26,224 @@ type Props = {
   sessions: Session[];
   onFinalize: () => void;
   onNewSession: () => void;
+  onDeleteSession: (sessionId: number) => void;
 };
+
+/** How far left a session row must be dragged before it commits to deleting itself. */
+const SWIPE_DELETE_THRESHOLD = -90;
+/** How far the row is allowed to travel while the finger is still down. */
+const SWIPE_MAX_DRAG = -140;
+/** How long the "swipe to delete" hint stays fully visible before it starts hiding. */
+const SWIPE_HINT_MS = 2600;
+/** Durations for the hint flap sliding out from behind the row and back in. */
+const HINT_SLIDE_OUT_MS = 260;
+const HINT_SLIDE_BACK_MS = 320;
+/** How far the hint flap tucks up behind the row, covering its rounded corners. */
+const HINT_FLAP_OVERLAP = 16;
+/** Extra list spacing reserved below a row while its hint flap peeks out. */
+const HINT_FLAP_RESERVED_SPACE = 36;
+/** How far the flap travels when sliding out from behind the row (its visible height). */
+const HINT_FLAP_TRAVEL = HINT_FLAP_RESERVED_SPACE;
+
+/** Small trash-can glyph, reused for the static icon and the swipe reveal. */
+function TrashIcon({ color, size = 16 }: { color: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M3 6h18" />
+      <Path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <Path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <Path d="M10 11v6" />
+      <Path d="M14 11v6" />
+    </Svg>
+  );
+}
+
+/**
+ * One row in the past-sessions list. Tapping the trash icon shows a "swipe
+ * left to delete" flap below the row; dragging the row itself left reveals a
+ * red trash icon behind it and, past a big enough swipe, deletes it with a
+ * haptic tick.
+ */
+function SessionRow({
+  session,
+  accent,
+  lang,
+  onDelete,
+}: {
+  session: Session;
+  accent: string;
+  lang: Lang;
+  onDelete: (sessionId: number) => void;
+}) {
+  const strings = STRINGS[lang];
+  const [hintMounted, setHintMounted] = useState(false);
+  // 0 = flap fully hidden behind the row, 1 = flap slid out and peeking below it.
+  const hintProgress = useSharedValue(0);
+  const hintTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const translateX = useSharedValue(0);
+  const committed = useSharedValue(false);
+  // 1 = row at full height; animated to 0 after a delete swipe so the rows
+  // below close the gap smoothly instead of jumping.
+  const collapseProgress = useSharedValue(1);
+  const measuredHeight = useSharedValue(0);
+  const isDeleting = useRef(false);
+
+  useEffect(
+    () => () => {
+      if (hintTimeout.current) clearTimeout(hintTimeout.current);
+    },
+    []
+  );
+
+  const showSwipeHint = () => {
+    if (hintTimeout.current) clearTimeout(hintTimeout.current);
+    setHintMounted(true);
+    hintProgress.value = withTiming(1, { duration: HINT_SLIDE_OUT_MS });
+    hintTimeout.current = setTimeout(() => {
+      hintProgress.value = withTiming(0, { duration: HINT_SLIDE_BACK_MS }, (finished) => {
+        if (finished) runOnJS(setHintMounted)(false);
+      });
+    }, SWIPE_HINT_MS);
+  };
+
+  /** Tucks the hint flap back in early (e.g. when the user starts swiping the row). */
+  const hideSwipeHint = () => {
+    if (hintTimeout.current) {
+      clearTimeout(hintTimeout.current);
+      hintTimeout.current = null;
+    }
+    hintProgress.value = withTiming(0, { duration: HINT_SLIDE_BACK_MS }, (finished) => {
+      if (finished) runOnJS(setHintMounted)(false);
+    });
+  };
+
+  const triggerDeleteHaptics = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  };
+
+  const markDeleting = () => {
+    isDeleting.current = true;
+  };
+
+  const removeRow = () => {
+    onDelete(session.id);
+  };
+
+  const pan = Gesture.Pan()
+    .activeOffsetX(-10)
+    .failOffsetY([-12, 12])
+    .onStart(() => {
+      // The flap below doesn't slide with the row, so tuck it away as soon
+      // as a swipe begins to keep the delete animation clean.
+      runOnJS(hideSwipeHint)();
+    })
+    .onUpdate((dragUpdateEvent) => {
+      if (committed.value) return;
+      const nextTranslateX = Math.max(Math.min(dragUpdateEvent.translationX, 0), SWIPE_MAX_DRAG);
+      translateX.value = nextTranslateX;
+      if (nextTranslateX <= SWIPE_DELETE_THRESHOLD) {
+        committed.value = true;
+        runOnJS(triggerDeleteHaptics)();
+        runOnJS(markDeleting)();
+        translateX.value = withTiming(SWIPE_MAX_DRAG * 3, { duration: 220 }, (slideFinished) => {
+          if (!slideFinished) return;
+          // Collapse the row's height so the list below closes the gap smoothly.
+          collapseProgress.value = withTiming(0, { duration: 200 }, (collapseFinished) => {
+            if (collapseFinished) runOnJS(removeRow)();
+          });
+        });
+      }
+    })
+    .onEnd(() => {
+      if (!committed.value) {
+        translateX.value = withTiming(0, { duration: 200 });
+      }
+    });
+
+  const rowStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+    backgroundColor: interpolateColor(
+      translateX.value,
+      [0, SWIPE_DELETE_THRESHOLD],
+      [NEUTRAL.sessionRowBg, DANGER.soft]
+    ),
+  }));
+
+  const trashRevealStyle = useAnimatedStyle(() => {
+    const progress = interpolate(translateX.value, [0, SWIPE_DELETE_THRESHOLD], [0, 1], Extrapolation.CLAMP);
+    return {
+      opacity: progress,
+      transform: [{ scale: 0.7 + progress * 0.5 }],
+    };
+  });
+
+  // Slides the flap out from its fully-tucked position behind the row (like
+  // a sheet of paper pulled out of a folder) and back in when hiding.
+  const hintFlapStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: interpolate(hintProgress.value, [0, 1], [-HINT_FLAP_TRAVEL, 0]) }],
+  }));
+
+  // Grows/shrinks in sync with the flap slide so the rows below move
+  // organically instead of jumping when the space is reserved/released.
+  const hintSpacerStyle = useAnimatedStyle(() => ({
+    height: interpolate(hintProgress.value, [0, 1], [0, HINT_FLAP_RESERVED_SPACE]),
+  }));
+
+  // No-op until a delete commits, then squashes the whole wrapper to 0 height.
+  const collapseStyle = useAnimatedStyle(() => ({
+    maxHeight: collapseProgress.value === 1 ? 500 : measuredHeight.value * collapseProgress.value,
+    opacity: collapseProgress.value,
+    overflow: 'hidden',
+  }));
+
+  return (
+    <Animated.View
+      style={[styles.rowWrapper, collapseStyle]}
+      onLayout={(layoutEvent) => {
+        if (!isDeleting.current) measuredHeight.value = layoutEvent.nativeEvent.layout.height;
+      }}
+    >
+      <View style={styles.rowArea}>
+        {hintMounted && (
+          <Animated.View style={[styles.hintFlap, hintFlapStyle]}>
+            <Text style={styles.hintFlapText}>{strings.swipeToDelete}</Text>
+          </Animated.View>
+        )}
+
+        <View style={styles.swipeContainer}>
+          <View style={styles.swipeBackground}>
+            <Animated.View style={trashRevealStyle}>
+              <TrashIcon color={DANGER.text} size={22} />
+            </Animated.View>
+          </View>
+
+          <GestureDetector gesture={pan}>
+            <Animated.View style={[styles.row, rowStyle]}>
+              <Text style={styles.rowWhen}>{formatSessionDate(session.start, lang)}</Text>
+              <View style={styles.rowRight}>
+                <View style={styles.rowTotalGroup}>
+                  <Text style={[styles.rowTotal, { color: accent }]}>{session.total}</Text>
+                  <Text style={styles.rowUnit}>{strings.piecesShort}</Text>
+                </View>
+                <Pressable
+                  onPress={showSwipeHint}
+                  accessibilityLabel={strings.deleteSession}
+                  hitSlop={8}
+                  style={styles.deleteBtn}
+                >
+                  <TrashIcon color={NEUTRAL.mutedTextFaintest} size={20} />
+                </Pressable>
+              </View>
+            </Animated.View>
+          </GestureDetector>
+        </View>
+      </View>
+
+      {hintMounted && <Animated.View style={hintSpacerStyle} />}
+    </Animated.View>
+  );
+}
 
 /**
  * Content of the right drawer: the in-progress session card (finalize/start
@@ -30,6 +259,7 @@ export default function HistoryDrawer({
   sessions,
   onFinalize,
   onNewSession,
+  onDeleteSession,
 }: Props) {
   const strings = STRINGS[lang];
   const canFinalize = count > 0;
@@ -74,13 +304,7 @@ export default function HistoryDrawer({
         {sessions.length > 0 ? (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }}>
             {sessions.map((session) => (
-              <View key={session.id} style={styles.row}>
-                <Text style={styles.rowWhen}>{formatSessionDate(session.start, lang)}</Text>
-                <View style={styles.rowTotalGroup}>
-                  <Text style={[styles.rowTotal, { color: accent }]}>{session.total}</Text>
-                  <Text style={styles.rowUnit}>{strings.piecesShort}</Text>
-                </View>
-              </View>
+              <SessionRow key={session.id} session={session} accent={accent} lang={lang} onDelete={onDeleteSession} />
             ))}
           </ScrollView>
         ) : (
@@ -171,6 +395,27 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
+  rowWrapper: {
+    position: 'relative',
+  },
+  rowArea: {
+    position: 'relative',
+  },
+  swipeContainer: {
+    position: 'relative',
+    borderRadius: RADII.pill,
+    overflow: 'hidden',
+  },
+  swipeBackground: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: DANGER.soft,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -178,12 +423,16 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 15,
     borderRadius: RADII.pill,
-    backgroundColor: NEUTRAL.sessionRowBg,
   },
   rowWhen: {
     fontFamily: 'Fredoka_500Medium',
     fontSize: 14,
     color: NEUTRAL.linkText,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   rowTotalGroup: {
     flexDirection: 'row',
@@ -197,6 +446,27 @@ const styles = StyleSheet.create({
   rowUnit: {
     fontSize: 11,
     color: NEUTRAL.mutedTextFaintest,
+  },
+  deleteBtn: {
+    padding: 4,
+  },
+  hintFlap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '100%',
+    marginTop: -HINT_FLAP_OVERLAP,
+    backgroundColor: DANGER.soft,
+    borderRadius: RADII.pill,
+    paddingTop: HINT_FLAP_OVERLAP + 8,
+    paddingBottom: 9,
+    paddingHorizontal: 15,
+    alignItems: 'center',
+  },
+  hintFlapText: {
+    fontFamily: 'Fredoka_600SemiBold',
+    fontSize: 12,
+    color: DANGER.text,
   },
   empty: {
     textAlign: 'center',

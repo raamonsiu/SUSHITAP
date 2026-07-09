@@ -4,14 +4,16 @@ import Animated, { Easing, interpolate, useAnimatedStyle, useSharedValue, withTi
 
 type Props = {
   accent: string;
+  /** Horizontal center point in pixels, within the full-width layer it renders in. */
+  left: number;
 };
 
 /**
  * A "+1" that floats up and fades out once, then is meant to be unmounted by
- * the parent (it does not remove itself). Horizontal centering is computed
- * from its own measured width, since percentage transforms aren't supported.
+ * the parent (it does not remove itself). Centers itself on `left` using its
+ * own measured width, since percentage transforms aren't supported.
  */
-export default function FloatingPlusOne({ accent }: Props) {
+export default function FloatingPlusOne({ accent, left }: Props) {
   const progress = useSharedValue(0);
   const [textWidth, setTextWidth] = useState(0);
 
@@ -32,7 +34,7 @@ export default function FloatingPlusOne({ accent }: Props) {
   return (
     <Animated.Text
       onLayout={(layoutEvent) => setTextWidth(layoutEvent.nativeEvent.layout.width)}
-      style={[styles.text, { color: accent, marginLeft: -textWidth / 2 }, animatedStyle]}
+      style={[styles.text, { color: accent, left: left - textWidth / 2 }, animatedStyle]}
     >
       +1
     </Animated.Text>
@@ -42,7 +44,6 @@ export default function FloatingPlusOne({ accent }: Props) {
 const styles = StyleSheet.create({
   text: {
     position: 'absolute',
-    left: '50%',
     top: 6,
     fontFamily: 'Fredoka_700Bold',
     fontSize: 34,

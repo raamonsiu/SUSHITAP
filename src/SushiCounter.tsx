@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   interpolate,
@@ -24,11 +24,15 @@ import { loadState, saveCount, savePrefs, saveSessions, saveStart } from './stor
 import { FLAVORS, NEUTRAL } from './theme';
 import type { Flavor, Lang, LangMode, Session } from './types';
 
+/** Horizontal breathing room the floating "+1" keeps from the screen edges. */
+const FLOATER_EDGE_MARGIN = 36;
+
 /**
  * Main and only screen of the app. Owns all state (counter, prefs, sessions,
  * drawer visibility) and renders the home view plus the two side drawers.
  */
 export default function SushiCounter() {
+  const { width: screenWidth } = useWindowDimensions();
   const [count, setCount] = useState(0);
   const [langMode, setLangMode] = useState<LangMode>('system');
   const [manualLang, setManualLang] = useState<Lang>('es');
@@ -37,7 +41,7 @@ export default function SushiCounter() {
   const [currentStart, setCurrentStart] = useState<number>(Date.now());
   const [menuOpen, setMenuOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [floaters, setFloaters] = useState<{ id: number }[]>([]);
+  const [floaters, setFloaters] = useState<{ id: number; left: number }[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -61,17 +65,20 @@ export default function SushiCounter() {
 
   /**
    * Handles a tap on the sushi. Increments the counter, persists it, and
-   * spawns a floating "+1" indicator that removes itself after 900ms.
+   * spawns a floating "+1" indicator (at a random horizontal spot on screen)
+   * that removes itself after 900ms.
    * Pre: none. Post: `count` is incremented by 1 and saved to disk.
    */
   const eat = () => {
     const floaterId = Date.now() + Math.random();
+    const usableWidth = Math.max(screenWidth - FLOATER_EDGE_MARGIN * 2, 0);
+    const floaterLeft = FLOATER_EDGE_MARGIN + Math.random() * usableWidth;
     setCount((previousCount) => {
       const nextCount = previousCount + 1;
       saveCount(nextCount);
       return nextCount;
     });
-    setFloaters((previousFloaters) => [...previousFloaters, { id: floaterId }]);
+    setFloaters((previousFloaters) => [...previousFloaters, { id: floaterId, left: floaterLeft }]);
     setTimeout(() => {
       setFloaters((previousFloaters) => previousFloaters.filter((floater) => floater.id !== floaterId));
     }, 900);
@@ -152,6 +159,19 @@ export default function SushiCounter() {
     });
   };
 
+  /**
+   * Removes one archived session from history.
+   * Pre: `sessionId` identifies an entry in `sessions`. Post: that entry is
+   * gone from state and from disk; the running session is untouched.
+   */
+  const deleteSession = (sessionId: number) => {
+    setSessions((previousSessions) => {
+      const updatedSessions = previousSessions.filter((session) => session.id !== sessionId);
+      saveSessions(updatedSessions);
+      return updatedSessions;
+    });
+  };
+
   const onSetLangMode = (nextLangMode: LangMode) => {
     setLangMode(nextLangMode);
     savePrefs({ langMode: nextLangMode, manualLang, flavor });
@@ -181,9 +201,9 @@ export default function SushiCounter() {
         <Text style={[styles.piecesLabel, { color: NEUTRAL.mutedTextMedium }]}>{strings.pieces}</Text>
 
         <View style={styles.sushiBlock}>
-          <View style={styles.sushiWrap}>
+          <View style={[styles.sushiWrap, { width: screenWidth }]}>
             {floaters.map((floater) => (
-              <FloatingPlusOne key={floater.id} accent={theme.accent} />
+              <FloatingPlusOne key={floater.id} accent={theme.accent} left={floater.left} />
             ))}
             <SushiButton onPress={eat} top={theme.top} topHi={theme.topHi} stripe={theme.stripe} />
           </View>
@@ -225,6 +245,7 @@ export default function SushiCounter() {
           sessions={sessions}
           onFinalize={finalize}
           onNewSession={newSession}
+          onDeleteSession={deleteSession}
         />
       </Drawer>
     </View>
@@ -365,6 +386,7 @@ const styles = StyleSheet.create({
   },
   sushiWrap: {
     position: 'relative',
+    alignItems: 'center',
   },
   hint: {
     marginTop: 6,

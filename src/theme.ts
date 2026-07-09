@@ -66,6 +66,12 @@ export const NEUTRAL = {
   overlay: 'rgba(60,40,35,0.34)',
 };
 
+/** Colors used for the swipe-to-delete affordance on history sessions. */
+export const DANGER = {
+  text: '#C75450',
+  soft: '#FBE4E2',
+};
+
 export const RADII = {
   topButton: 18,
   pill: 15,

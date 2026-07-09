@@ -26,6 +26,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     suggestionsPlaceholder: 'Escribe aquí tu sugerencia...',
     send: 'Enviar',
     cancel: 'Cancelar',
+    deleteSession: 'Borrar sesión',
+    swipeToDelete: 'Desliza a la izquierda para borrar',
   },
   en: {
     eaten: 'Today you ate',
@@ -52,6 +54,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     suggestionsPlaceholder: 'Write your suggestion here...',
     send: 'Send',
     cancel: 'Cancel',
+    deleteSession: 'Delete session',
+    swipeToDelete: 'Swipe left to delete',
   },
   ca: {
     eaten: 'Avui has menjat',
@@ -78,6 +82,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     suggestionsPlaceholder: 'Escriu aquí el teu suggeriment...',
     send: 'Envia',
     cancel: 'Cancel·la',
+    deleteSession: 'Esborra la sessió',
+    swipeToDelete: "Llisca cap a l'esquerra per esborrar",
   },
   fr: {
     eaten: "Aujourd'hui tu as mangé",
@@ -104,6 +110,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     suggestionsPlaceholder: 'Écris ta suggestion ici...',
     send: 'Envoyer',
     cancel: 'Annuler',
+    deleteSession: 'Supprimer la session',
+    swipeToDelete: 'Glisse vers la gauche pour supprimer',
   },
   it: {
     eaten: 'Oggi hai mangiato',
@@ -130,6 +138,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     suggestionsPlaceholder: 'Scrivi qui il tuo suggerimento...',
     send: 'Invia',
     cancel: 'Annulla',
+    deleteSession: 'Elimina sessione',
+    swipeToDelete: 'Scorri a sinistra per eliminare',
   },
   de: {
     eaten: 'Heute hast du gegessen',
@@ -156,6 +166,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     suggestionsPlaceholder: 'Schreib hier deinen Vorschlag...',
     send: 'Senden',
     cancel: 'Abbrechen',
+    deleteSession: 'Sitzung löschen',
+    swipeToDelete: 'Nach links wischen zum Löschen',
   },
   ja: {
     eaten: '今日食べたのは',
@@ -182,6 +194,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     suggestionsPlaceholder: 'ここに意見を書いてください...',
     send: '送信',
     cancel: 'キャンセル',
+    deleteSession: 'セッションを削除',
+    swipeToDelete: '左にスワイプして削除',
   },
 };
 
