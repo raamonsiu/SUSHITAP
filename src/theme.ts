@@ -106,6 +106,7 @@ export const NEUTRAL = {
   cheeks: '#FF9BB0',
   overlay: 'rgba(60,40,35,0.34)',
   topButtonBg: 'rgba(255,255,255,0.85)',
+  floaterHalo: 'rgba(255,255,255,0.7)',
 };
 
 export type NeutralPalette = typeof NEUTRAL;
@@ -132,6 +133,7 @@ export const NEUTRAL_DARK: NeutralPalette = {
   cheeks: '#FF9BB0',
   overlay: 'rgba(0,0,0,0.55)',
   topButtonBg: 'rgba(58,46,42,0.85)',
+  floaterHalo: 'rgba(0,0,0,0.35)',
 };
 
 /** Colors used for the swipe-to-delete affordance on history sessions. */
@@ -178,6 +180,34 @@ export const SHADOWS = {
     elevation: 4,
   },
 } as const;
+
+/** Named font-family sets so typography can swap per language. */
+export type FontSet = {
+  regular: string;
+  medium: string;
+  semiBold: string;
+  bold: string;
+};
+
+/** Fredoka — the app's main typeface (latin scripts). */
+export const FONTS_LATIN: FontSet = {
+  regular: 'Fredoka_400Regular',
+  medium: 'Fredoka_500Medium',
+  semiBold: 'Fredoka_600SemiBold',
+  bold: 'Fredoka_700Bold',
+};
+
+/**
+ * M PLUS Rounded 1c — rounded typeface with full Japanese coverage, visually
+ * close to Fredoka. It has no 600 weight, so semiBold maps to 700 and bold
+ * bumps to 800 to keep the hierarchy.
+ */
+export const FONTS_JA: FontSet = {
+  regular: 'MPLUSRounded1c_400Regular',
+  medium: 'MPLUSRounded1c_500Medium',
+  semiBold: 'MPLUSRounded1c_700Bold',
+  bold: 'MPLUSRounded1c_800ExtraBold',
+};
 
 export const DEV_LINKS = {
   githubUrl: 'https://github.com/raamonsiu',

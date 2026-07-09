@@ -20,7 +20,7 @@ type Props = {
  */
 export default function SuggestionModal({ visible, onClose, accent, lang }: Props) {
   const strings = STRINGS[lang];
-  const { neutral } = useAppTheme();
+  const { neutral, fonts } = useAppTheme();
   const [text, setText] = useState('');
   const canSend = text.trim().length > 0;
 
@@ -30,7 +30,7 @@ export default function SuggestionModal({ visible, onClose, accent, lang }: Prop
   };
 
   const handleSend = () => {
-    const subject = encodeURIComponent('Sugerencia SUSHITAP');
+    const subject = encodeURIComponent(strings.suggestionsSubject);
     const body = encodeURIComponent(text.trim());
     Linking.openURL(`mailto:${DEV_LINKS.suggestionsEmail}?subject=${subject}&body=${body}`);
     setText('');
@@ -44,8 +44,8 @@ export default function SuggestionModal({ visible, onClose, accent, lang }: Prop
           style={[styles.card, { backgroundColor: neutral.drawerBg }, SHADOWS.drawer]}
           onPress={() => {}}
         >
-          <Text style={[styles.title, { color: neutral.textBrown }]}>{strings.suggestions}</Text>
-          <Text style={[styles.hint, { color: neutral.mutedTextSoft }]}>{strings.suggestionsHint}</Text>
+          <Text style={[styles.title, { color: neutral.textBrown, fontFamily: fonts.bold }]}>{strings.suggestions}</Text>
+          <Text style={[styles.hint, { color: neutral.mutedTextSoft, fontFamily: fonts.medium }]}>{strings.suggestionsHint}</Text>
 
           <TextInput
             value={text}
@@ -53,12 +53,12 @@ export default function SuggestionModal({ visible, onClose, accent, lang }: Prop
             placeholder={strings.suggestionsPlaceholder}
             placeholderTextColor={neutral.mutedTextFaint}
             multiline
-            style={[styles.input, { backgroundColor: neutral.pillInactiveBg, color: neutral.textBrown }]}
+            style={[styles.input, { backgroundColor: neutral.pillInactiveBg, color: neutral.textBrown, fontFamily: fonts.medium }]}
           />
 
           <View style={styles.buttonRow}>
             <Pressable style={[styles.cancelBtn, { borderColor: accent }]} onPress={handleClose}>
-              <Text style={[styles.cancelText, { color: accent }]}>{strings.cancel}</Text>
+              <Text style={[styles.cancelText, { color: accent, fontFamily: fonts.semiBold }]}>{strings.cancel}</Text>
             </Pressable>
             <Pressable
               onPress={handleSend}
@@ -68,7 +68,7 @@ export default function SuggestionModal({ visible, onClose, accent, lang }: Prop
                 canSend ? { backgroundColor: accent, ...SHADOWS.activePill } : { backgroundColor: neutral.disabledBg },
               ]}
             >
-              <Text style={[styles.sendText, { color: canSend ? '#fff' : neutral.disabledText }]}>
+              <Text style={[styles.sendText, { color: canSend ? '#fff' : neutral.disabledText, fontFamily: fonts.semiBold }]}>
                 {strings.send}
               </Text>
             </Pressable>

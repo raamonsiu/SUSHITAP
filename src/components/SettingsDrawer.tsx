@@ -45,7 +45,7 @@ function Pill({
   fill?: boolean;
   variant?: 'solid' | 'outline';
 }) {
-  const { neutral } = useAppTheme();
+  const { neutral, fonts } = useAppTheme();
   const isSolidActive = active && variant === 'solid';
   const isOutlineActive = active && variant === 'outline';
 
@@ -64,7 +64,7 @@ function Pill({
       <Text
         style={[
           styles.pillText,
-          { color: isSolidActive ? '#fff' : isOutlineActive ? accent : neutral.mutedTextSoft },
+          { color: isSolidActive ? '#fff' : isOutlineActive ? accent : neutral.mutedTextSoft, fontFamily: fonts.semiBold },
         ]}
       >
         {label}
@@ -119,7 +119,7 @@ export default function SettingsDrawer({
   onSetFlavor,
 }: Props) {
   const strings = STRINGS[lang];
-  const { neutral } = useAppTheme();
+  const { neutral, fonts } = useAppTheme();
   const [suggestionModalOpen, setSuggestionModalOpen] = useState(false);
   const [manualPickerOpen, setManualPickerOpen] = useState(false);
 
@@ -143,10 +143,10 @@ export default function SettingsDrawer({
   return (
     <View style={styles.content} pointerEvents={open ? 'auto' : 'none'}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: neutral.textBrown }]}>{strings.settings}</Text>
+        <Text style={[styles.title, { color: neutral.textBrown, fontFamily: fonts.bold }]}>{strings.settings}</Text>
         <Pressable
           onPress={onClose}
-          accessibilityLabel="Cerrar"
+          accessibilityLabel={strings.a11yClose}
           style={[styles.closeBtn, { backgroundColor: neutral.closeBtnBg }]}
         >
           <Text style={[styles.closeText, { color: neutral.mutedTextSoft }]}>✕</Text>
@@ -154,7 +154,7 @@ export default function SettingsDrawer({
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.language}</Text>
+        <Text style={[styles.sectionLabel, { color: accent, fontFamily: fonts.bold }]}>{strings.language}</Text>
         <View style={styles.pillRow}>
           <Pill label={strings.langModeSystem} active={langMode === 'system'} accent={accent} onPress={handlePressSystem} />
           <Pill
@@ -179,14 +179,14 @@ export default function SettingsDrawer({
             ))}
           </View>
         ) : (
-          <Text style={[styles.languageHint, { color: neutral.mutedTextSoft }]}>
+          <Text style={[styles.languageHint, { color: neutral.mutedTextSoft, fontFamily: fonts.medium }]}>
             → {LANG_NATIVE_NAMES[langMode === 'system' ? lang : manualLang]}
           </Text>
         )}
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.theme}</Text>
+        <Text style={[styles.sectionLabel, { color: accent, fontFamily: fonts.bold }]}>{strings.theme}</Text>
         <View style={styles.pillRow}>
           {(['system', 'light', 'dark'] as ThemeMode[]).map((themeModeOption) => (
             <Pill
@@ -207,7 +207,7 @@ export default function SettingsDrawer({
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.piece}</Text>
+        <Text style={[styles.sectionLabel, { color: accent, fontFamily: fonts.bold }]}>{strings.piece}</Text>
         <View style={styles.pillRow}>
           {(['salmon', 'tuna', 'egg'] as Flavor[]).map((flavorCode) => (
             <Pill
@@ -222,39 +222,39 @@ export default function SettingsDrawer({
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.suggestions}</Text>
+        <Text style={[styles.sectionLabel, { color: accent, fontFamily: fonts.bold }]}>{strings.suggestions}</Text>
         <Pressable
           style={[styles.fullWidthChip, { backgroundColor: neutral.pillInactiveBg }]}
           onPress={() => setSuggestionModalOpen(true)}
         >
-          <Text style={[styles.linkText, { color: neutral.linkText }]}>{strings.suggestionsCta}</Text>
+          <Text style={[styles.linkText, { color: neutral.linkText, fontFamily: fonts.semiBold }]}>{strings.suggestionsCta}</Text>
         </Pressable>
       </View>
 
       <View style={styles.footer}>
         <View style={{ alignItems: 'center' }}>
-          <Text style={[styles.footerText, { color: neutral.mutedTextStrong }]}>{strings.footer}</Text>
-          <Text style={[styles.versionText, { color: neutral.mutedTextFaint }]}>
+          <Text style={[styles.footerText, { color: neutral.mutedTextStrong, fontFamily: fonts.semiBold }]}>{strings.footer}</Text>
+          <Text style={[styles.versionText, { color: neutral.mutedTextFaint, fontFamily: fonts.medium }]}>
             {strings.version} {APP_VERSION}
           </Text>
         </View>
         <View style={[styles.divider, { backgroundColor: neutral.divider }]} />
         <View style={{ gap: 11 }}>
-          <Text style={[styles.sectionLabel, { color: accent }]}>{strings.about}</Text>
+          <Text style={[styles.sectionLabel, { color: accent, fontFamily: fonts.bold }]}>{strings.about}</Text>
           <View style={styles.pillRow}>
             <Pressable
               style={[styles.linkChip, { backgroundColor: neutral.pillInactiveBg }]}
               onPress={() => Linking.openURL(DEV_LINKS.githubUrl)}
             >
               <GithubIcon color={accent} />
-              <Text style={[styles.linkText, { color: neutral.linkText }]}>GitHub</Text>
+              <Text style={[styles.linkText, { color: neutral.linkText, fontFamily: fonts.semiBold }]}>GitHub</Text>
             </Pressable>
             <Pressable
               style={[styles.linkChip, { backgroundColor: neutral.pillInactiveBg }]}
               onPress={() => Linking.openURL(DEV_LINKS.linkedinUrl)}
             >
               <LinkedinIcon color={accent} />
-              <Text style={[styles.linkText, { color: neutral.linkText }]}>LinkedIn</Text>
+              <Text style={[styles.linkText, { color: neutral.linkText, fontFamily: fonts.semiBold }]}>LinkedIn</Text>
             </Pressable>
           </View>
           <Pressable
@@ -262,7 +262,7 @@ export default function SettingsDrawer({
             onPress={() => Linking.openURL(DEV_LINKS.buyMeACoffeeUrl)}
           >
             <BuyMeACoffeeIcon color={accent} />
-            <Text style={[styles.linkText, { color: neutral.linkText }]}>Buy me a coffee</Text>
+            <Text style={[styles.linkText, { color: neutral.linkText, fontFamily: fonts.semiBold }]}>Buy me a coffee</Text>
           </Pressable>
         </View>
       </View>

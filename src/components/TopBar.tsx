@@ -7,6 +7,8 @@ import { useAppTheme } from '../ThemeContext';
 
 type Props = {
   accent: string;
+  menuLabel: string;
+  historyLabel: string;
   onOpenMenu: () => void;
   onOpenHistory: () => void;
 };
@@ -14,7 +16,7 @@ type Props = {
 const BUTTON_SIZE = 60;
 
 /** Top row with the menu (settings) and history buttons, pinned below the status bar. */
-export default function TopBar({ accent, onOpenMenu, onOpenHistory }: Props) {
+export default function TopBar({ accent, menuLabel, historyLabel, onOpenMenu, onOpenHistory }: Props) {
   const insets = useSafeAreaInsets();
   const { neutral } = useAppTheme();
   const buttonBg = { backgroundColor: neutral.topButtonBg };
@@ -23,7 +25,7 @@ export default function TopBar({ accent, onOpenMenu, onOpenHistory }: Props) {
     <View style={[styles.row, { paddingTop: insets.top + 16 }]}>
       <Pressable
         onPress={onOpenMenu}
-        accessibilityLabel="Menú"
+        accessibilityLabel={menuLabel}
         hitSlop={8}
         style={({ pressed }) => [styles.button, buttonBg, SHADOWS.topButton, pressed && styles.pressed]}
       >
@@ -34,7 +36,7 @@ export default function TopBar({ accent, onOpenMenu, onOpenHistory }: Props) {
 
       <Pressable
         onPress={onOpenHistory}
-        accessibilityLabel="Historial"
+        accessibilityLabel={historyLabel}
         hitSlop={8}
         style={({ pressed }) => [styles.button, buttonBg, SHADOWS.topButton, pressed && styles.pressed]}
       >

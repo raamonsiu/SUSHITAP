@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, { Easing, interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useAppTheme } from '../ThemeContext';
 
 type Props = {
   accent: string;
@@ -14,6 +15,7 @@ type Props = {
  * own measured width, since percentage transforms aren't supported.
  */
 export default function FloatingPlusOne({ accent, left }: Props) {
+  const { neutral } = useAppTheme();
   const progress = useSharedValue(0);
   const [textWidth, setTextWidth] = useState(0);
 
@@ -34,7 +36,11 @@ export default function FloatingPlusOne({ accent, left }: Props) {
   return (
     <Animated.Text
       onLayout={(layoutEvent) => setTextWidth(layoutEvent.nativeEvent.layout.width)}
-      style={[styles.text, { color: accent, left: left - textWidth / 2 }, animatedStyle]}
+      style={[
+        styles.text,
+        { color: accent, left: left - textWidth / 2, textShadowColor: neutral.floaterHalo },
+        animatedStyle,
+      ]}
     >
       +1
     </Animated.Text>
@@ -47,7 +53,6 @@ const styles = StyleSheet.create({
     top: 6,
     fontFamily: 'Fredoka_700Bold',
     fontSize: 34,
-    textShadowColor: 'rgba(255,255,255,0.7)',
     textShadowOffset: { width: 0, height: 3 },
     textShadowRadius: 0,
   },

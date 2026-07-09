@@ -77,7 +77,7 @@ function SessionRow({
   onDelete: (sessionId: number) => void;
 }) {
   const strings = STRINGS[lang];
-  const { neutral, danger } = useAppTheme();
+  const { neutral, danger, fonts } = useAppTheme();
   const [hintMounted, setHintMounted] = useState(false);
   // 0 = flap fully hidden behind the row, 1 = flap slid out and peeking below it.
   const hintProgress = useSharedValue(0);
@@ -209,7 +209,7 @@ function SessionRow({
       <View style={styles.rowArea}>
         {hintMounted && (
           <Animated.View style={[styles.hintFlap, { backgroundColor: danger.soft }, hintFlapStyle]}>
-            <Text style={[styles.hintFlapText, { color: danger.text }]}>{strings.swipeToDelete}</Text>
+            <Text style={[styles.hintFlapText, { color: danger.text, fontFamily: fonts.semiBold }]}>{strings.swipeToDelete}</Text>
           </Animated.View>
         )}
 
@@ -222,11 +222,11 @@ function SessionRow({
 
           <GestureDetector gesture={pan}>
             <Animated.View style={[styles.row, rowStyle]}>
-              <Text style={[styles.rowWhen, { color: neutral.linkText }]}>{formatSessionDate(session.start, lang)}</Text>
+              <Text style={[styles.rowWhen, { color: neutral.linkText, fontFamily: fonts.medium }]}>{formatSessionDate(session.start, lang)}</Text>
               <View style={styles.rowRight}>
                 <View style={styles.rowTotalGroup}>
                   <Text style={[styles.rowTotal, { color: accent }]}>{session.total}</Text>
-                  <Text style={[styles.rowUnit, { color: neutral.mutedTextFaintest }]}>{strings.piecesShort}</Text>
+                  <Text style={[styles.rowUnit, { color: neutral.mutedTextFaintest, fontFamily: fonts.medium }]}>{strings.piecesShort}</Text>
                 </View>
                 <Pressable
                   onPress={showSwipeHint}
@@ -264,16 +264,16 @@ export default function HistoryDrawer({
   onDeleteSession,
 }: Props) {
   const strings = STRINGS[lang];
-  const { neutral } = useAppTheme();
+  const { neutral, fonts } = useAppTheme();
   const canFinalize = count > 0;
 
   return (
     <View style={styles.content} pointerEvents={open ? 'auto' : 'none'}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: neutral.textBrown }]}>{strings.history}</Text>
+        <Text style={[styles.title, { color: neutral.textBrown, fontFamily: fonts.bold }]}>{strings.history}</Text>
         <Pressable
           onPress={onClose}
-          accessibilityLabel="Cerrar"
+          accessibilityLabel={strings.a11yClose}
           style={[styles.closeBtn, { backgroundColor: neutral.closeBtnBg }]}
         >
           <Text style={[styles.closeText, { color: neutral.mutedTextSoft }]}>✕</Text>
@@ -282,7 +282,7 @@ export default function HistoryDrawer({
 
       <View style={[styles.card, { backgroundColor: softBg }]}>
         <View style={styles.cardRow}>
-          <Text style={[styles.cardLabel, { color: neutral.mutedTextSoft }]}>{strings.current}</Text>
+          <Text style={[styles.cardLabel, { color: neutral.mutedTextSoft, fontFamily: fonts.semiBold }]}>{strings.current}</Text>
           <Text style={[styles.cardCount, { color: accent }]}>{count}</Text>
         </View>
 
@@ -296,18 +296,18 @@ export default function HistoryDrawer({
               : { backgroundColor: neutral.disabledBg },
           ]}
         >
-          <Text style={[styles.finalizeText, { color: canFinalize ? '#fff' : neutral.disabledText }]}>
+          <Text style={[styles.finalizeText, { color: canFinalize ? '#fff' : neutral.disabledText, fontFamily: fonts.semiBold }]}>
             {strings.finalize}
           </Text>
         </Pressable>
 
         <Pressable onPress={onNewSession} style={[styles.newBtn, { borderColor: accent }]}>
-          <Text style={[styles.newText, { color: accent }]}>{strings.newSession}</Text>
+          <Text style={[styles.newText, { color: accent, fontFamily: fonts.semiBold }]}>{strings.newSession}</Text>
         </Pressable>
       </View>
 
       <View style={styles.listSection}>
-        <Text style={[styles.sectionLabel, { color: accent }]}>{strings.sessionsTitle}</Text>
+        <Text style={[styles.sectionLabel, { color: accent, fontFamily: fonts.bold }]}>{strings.sessionsTitle}</Text>
         {sessions.length > 0 ? (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }}>
             {sessions.map((session) => (
@@ -315,7 +315,7 @@ export default function HistoryDrawer({
             ))}
           </ScrollView>
         ) : (
-          <Text style={[styles.empty, { color: neutral.mutedTextFaint }]}>{strings.empty}</Text>
+          <Text style={[styles.empty, { color: neutral.mutedTextFaint, fontFamily: fonts.medium }]}>{strings.empty}</Text>
         )}
       </View>
     </View>

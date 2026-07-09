@@ -1,7 +1,15 @@
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, useColorScheme, useWindowDimensions, View } from 'react-native';
+import {
+  BackHandler,
+  Pressable,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -72,9 +80,38 @@ export default function SushiCounter() {
 
   const scheme: Scheme =
     themeMode === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : themeMode;
-  const appTheme = useMemo(() => buildAppTheme(flavor, scheme), [flavor, scheme]);
+  const appTheme = useMemo(() => buildAppTheme(flavor, scheme, lang), [flavor, scheme, lang]);
   const theme = appTheme.flavor;
   const neutral = appTheme.neutral;
+  const fonts = appTheme.fonts;
+
+  // Persistence: state is the single source of truth and every change syncs
+  // to AsyncStorage from these effects, keeping the update handlers pure
+  // (React may invoke state updater functions more than once).
+  useEffect(() => {
+    if (loaded) saveCount(count);
+  }, [count, loaded]);
+  useEffect(() => {
+    if (loaded) saveSessions(sessions);
+  }, [sessions, loaded]);
+  useEffect(() => {
+    if (loaded) saveStart(currentStart);
+  }, [currentStart, loaded]);
+  useEffect(() => {
+    if (loaded) savePrefs({ langMode, manualLang, themeMode, flavor });
+  }, [langMode, manualLang, themeMode, flavor, loaded]);
+
+  // Android back button: with a drawer open, back closes it instead of
+  // backgrounding the app.
+  useEffect(() => {
+    if (!menuOpen && !historyOpen) return;
+    const backSubscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      setMenuOpen(false);
+      setHistoryOpen(false);
+      return true;
+    });
+    return () => backSubscription.remove();
+  }, [menuOpen, historyOpen]);
 
   /**
    * Handles a tap on the sushi. Increments the counter with a soft haptic
@@ -87,11 +124,7 @@ export default function SushiCounter() {
     const floaterId = Date.now() + Math.random();
     const usableWidth = Math.max(screenWidth - FLOATER_EDGE_MARGIN * 2, 0);
     const floaterLeft = FLOATER_EDGE_MARGIN + Math.random() * usableWidth;
-    setCount((previousCount) => {
-      const nextCount = previousCount + 1;
-      saveCount(nextCount);
-      return nextCount;
-    });
+    setCount((previousCount) => previousCount + 1);
     setFloaters((previousFloaters) => [...previousFloaters, { id: floaterId, left: floaterLeft }]);
     setTimeout(() => {
       setFloaters((previousFloaters) => previousFloaters.filter((floater) => floater.id !== floaterId));
@@ -100,15 +133,11 @@ export default function SushiCounter() {
 
   /**
    * Handles a downward swipe on the sushi: decrements the counter by one
-   * (never below 0) and persists it. Intentionally silent — no haptic and no
-   * floating indicator.
+   * (never below 0). Intentionally silent — no haptic and no floating
+   * indicator.
    */
   const uneat = () => {
-    setCount((previousCount) => {
-      const nextCount = Math.max(previousCount - 1, 0);
-      saveCount(nextCount);
-      return nextCount;
-    });
+    setCount((previousCount) => Math.max(previousCount - 1, 0));
   };
 
   const openMenu = () => {
@@ -133,26 +162,17 @@ export default function SushiCounter() {
    * Post: `count` is 0, `sessions` may gain a new entry, `currentStart` is now.
    */
   const finalize = () => {
-    setCount((currentCount) => {
-      if (currentCount > 0) {
-        setSessions((previousSessions) => {
-          const archivedSession: Session = {
-            id: Date.now(),
-            start: currentStart,
-            end: Date.now(),
-            total: currentCount,
-          };
-          const updatedSessions = [archivedSession, ...previousSessions];
-          saveSessions(updatedSessions);
-          return updatedSessions;
-        });
-      }
-      const newSessionStart = Date.now();
-      saveCount(0);
-      saveStart(newSessionStart);
-      setCurrentStart(newSessionStart);
-      return 0;
-    });
+    if (count > 0) {
+      const archivedSession: Session = {
+        id: Date.now(),
+        start: currentStart,
+        end: Date.now(),
+        total: count,
+      };
+      setSessions((previousSessions) => [archivedSession, ...previousSessions]);
+    }
+    setCount(0);
+    setCurrentStart(Date.now());
   };
 
   /**
@@ -161,60 +181,29 @@ export default function SushiCounter() {
    * drawer, since there is nothing to reset.
    */
   const newSession = () => {
-    setCount((currentCount) => {
-      if (currentCount > 0) {
-        setSessions((previousSessions) => {
-          const archivedSession: Session = {
-            id: Date.now(),
-            start: currentStart,
-            end: Date.now(),
-            total: currentCount,
-          };
-          const updatedSessions = [archivedSession, ...previousSessions];
-          saveSessions(updatedSessions);
-          return updatedSessions;
-        });
-        const newSessionStart = Date.now();
-        saveCount(0);
-        saveStart(newSessionStart);
-        setCurrentStart(newSessionStart);
-        setHistoryOpen(false);
-        return 0;
-      }
-      setHistoryOpen(false);
-      return currentCount;
-    });
+    if (count > 0) finalize();
+    setHistoryOpen(false);
   };
 
   /**
    * Removes one archived session from history.
    * Pre: `sessionId` identifies an entry in `sessions`. Post: that entry is
-   * gone from state and from disk; the running session is untouched.
+   * gone from state (and from disk via the persistence effect); the running
+   * session is untouched.
    */
   const deleteSession = (sessionId: number) => {
-    setSessions((previousSessions) => {
-      const updatedSessions = previousSessions.filter((session) => session.id !== sessionId);
-      saveSessions(updatedSessions);
-      return updatedSessions;
-    });
+    setSessions((previousSessions) =>
+      previousSessions.filter((session) => session.id !== sessionId)
+    );
   };
 
-  const onSetLangMode = (nextLangMode: LangMode) => {
-    setLangMode(nextLangMode);
-    savePrefs({ langMode: nextLangMode, manualLang, themeMode, flavor });
-  };
+  const onSetLangMode = (nextLangMode: LangMode) => setLangMode(nextLangMode);
   const onSetManualLang = (nextManualLang: Lang) => {
+    setLangMode('manual');
     setManualLang(nextManualLang);
-    savePrefs({ langMode: 'manual', manualLang: nextManualLang, themeMode, flavor });
   };
-  const onSetThemeMode = (nextThemeMode: ThemeMode) => {
-    setThemeMode(nextThemeMode);
-    savePrefs({ langMode, manualLang, themeMode: nextThemeMode, flavor });
-  };
-  const onSetFlavor = (nextFlavor: Flavor) => {
-    setFlavor(nextFlavor);
-    savePrefs({ langMode, manualLang, themeMode, flavor: nextFlavor });
-  };
+  const onSetThemeMode = (nextThemeMode: ThemeMode) => setThemeMode(nextThemeMode);
+  const onSetFlavor = (nextFlavor: Flavor) => setFlavor(nextFlavor);
 
   if (!loaded) return <View style={[styles.root, { backgroundColor: theme.softBg }]} />;
 
@@ -225,13 +214,23 @@ export default function SushiCounter() {
       <Background colors={theme.bg} />
       <Blobs colors={theme.blobs} />
 
-      <TopBar accent={theme.accent} onOpenMenu={openMenu} onOpenHistory={openHistory} />
+      <TopBar
+        accent={theme.accent}
+        menuLabel={strings.a11yMenu}
+        historyLabel={strings.a11yHistory}
+        onOpenMenu={openMenu}
+        onOpenHistory={openHistory}
+      />
 
       <View style={styles.middle}>
-        <Text style={[styles.eatenLabel, { color: neutral.mutedTextStrong }]}>{strings.eaten}</Text>
+        <Text style={[styles.eatenLabel, { color: neutral.mutedTextStrong, fontFamily: fonts.semiBold }]}>
+          {strings.eaten}
+        </Text>
 
         <CounterNumber count={count} accent={theme.accent} />
-        <Text style={[styles.piecesLabel, { color: neutral.mutedTextMedium }]}>{strings.pieces}</Text>
+        <Text style={[styles.piecesLabel, { color: neutral.mutedTextMedium, fontFamily: fonts.semiBold }]}>
+          {strings.pieces}
+        </Text>
 
         <View style={styles.sushiBlock}>
           <View style={[styles.sushiWrap, { width: screenWidth }]}>
@@ -241,13 +240,18 @@ export default function SushiCounter() {
             <SushiButton
               onPress={eat}
               onSwipeDown={uneat}
+              accessibilityLabel={strings.a11yEat}
               top={theme.top}
               topHi={theme.topHi}
               stripe={theme.stripe}
             />
           </View>
-          <Text style={[styles.hint, { color: neutral.mutedTextStrong }]}>{strings.tap}</Text>
-          <Text style={[styles.hintSmall, { color: neutral.mutedTextFaint }]}>{strings.swipeDownHint}</Text>
+          <Text style={[styles.hint, { color: neutral.mutedTextStrong, fontFamily: fonts.medium }]}>
+            {strings.tap}
+          </Text>
+          <Text style={[styles.hintSmall, { color: neutral.mutedTextFaint, fontFamily: fonts.medium }]}>
+            {strings.swipeDownHint}
+          </Text>
         </View>
       </View>
 
@@ -347,12 +351,14 @@ const SWIPE_DOWN_THRESHOLD = 45;
 function SushiButton({
   onPress,
   onSwipeDown,
+  accessibilityLabel,
   top,
   topHi,
   stripe,
 }: {
   onPress: () => void;
   onSwipeDown: () => void;
+  accessibilityLabel: string;
   top: string;
   topHi: string;
   stripe: string;
@@ -393,7 +399,7 @@ function SushiButton({
     <GestureDetector gesture={swipeDown}>
       <Pressable
         onPress={onPress}
-        accessibilityLabel="Comer una pieza de sushi"
+        accessibilityLabel={accessibilityLabel}
         onPressIn={() => {
           pressScale.value = withTiming(0.9, { duration: 100 });
         }}
