@@ -28,6 +28,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     cancel: 'Cancelar',
     deleteSession: 'Borrar sesión',
     swipeToDelete: 'Desliza a la izquierda para borrar',
+    swipeDownHint: 'desliza hacia abajo para restar uno',
   },
   en: {
     eaten: 'Today you ate',
@@ -56,6 +57,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     cancel: 'Cancel',
     deleteSession: 'Delete session',
     swipeToDelete: 'Swipe left to delete',
+    swipeDownHint: 'swipe down to subtract one',
   },
   ca: {
     eaten: 'Avui has menjat',
@@ -84,6 +86,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     cancel: 'Cancel·la',
     deleteSession: 'Esborra la sessió',
     swipeToDelete: "Llisca cap a l'esquerra per esborrar",
+    swipeDownHint: 'llisca cap avall per restar-ne un',
   },
   fr: {
     eaten: "Aujourd'hui tu as mangé",
@@ -112,6 +115,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     cancel: 'Annuler',
     deleteSession: 'Supprimer la session',
     swipeToDelete: 'Glisse vers la gauche pour supprimer',
+    swipeDownHint: 'glisse vers le bas pour en retirer un',
   },
   it: {
     eaten: 'Oggi hai mangiato',
@@ -140,6 +144,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     cancel: 'Annulla',
     deleteSession: 'Elimina sessione',
     swipeToDelete: 'Scorri a sinistra per eliminare',
+    swipeDownHint: 'scorri in giù per toglierne uno',
   },
   de: {
     eaten: 'Heute hast du gegessen',
@@ -168,6 +173,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     cancel: 'Abbrechen',
     deleteSession: 'Sitzung löschen',
     swipeToDelete: 'Nach links wischen zum Löschen',
+    swipeDownHint: 'nach unten wischen, um eins abzuziehen',
   },
   ja: {
     eaten: '今日食べたのは',
@@ -196,6 +202,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     cancel: 'キャンセル',
     deleteSession: 'セッションを削除',
     swipeToDelete: '左にスワイプして削除',
+    swipeDownHint: '下にスワイプして1つ減らす',
   },
 };
 

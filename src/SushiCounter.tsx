@@ -1,8 +1,11 @@
+import * as Haptics from 'expo-haptics';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   interpolate,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -64,12 +67,13 @@ export default function SushiCounter() {
   const theme = FLAVORS[flavor];
 
   /**
-   * Handles a tap on the sushi. Increments the counter, persists it, and
-   * spawns a floating "+1" indicator (at a random horizontal spot on screen)
-   * that removes itself after 900ms.
+   * Handles a tap on the sushi. Increments the counter with a soft haptic
+   * tick, persists it, and spawns a floating "+1" indicator (at a random
+   * horizontal spot on screen) that removes itself after 900ms.
    * Pre: none. Post: `count` is incremented by 1 and saved to disk.
    */
   const eat = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const floaterId = Date.now() + Math.random();
     const usableWidth = Math.max(screenWidth - FLOATER_EDGE_MARGIN * 2, 0);
     const floaterLeft = FLOATER_EDGE_MARGIN + Math.random() * usableWidth;
@@ -82,6 +86,19 @@ export default function SushiCounter() {
     setTimeout(() => {
       setFloaters((previousFloaters) => previousFloaters.filter((floater) => floater.id !== floaterId));
     }, 900);
+  };
+
+  /**
+   * Handles a downward swipe on the sushi: decrements the counter by one
+   * (never below 0) and persists it. Intentionally silent — no haptic and no
+   * floating indicator.
+   */
+  const uneat = () => {
+    setCount((previousCount) => {
+      const nextCount = Math.max(previousCount - 1, 0);
+      saveCount(nextCount);
+      return nextCount;
+    });
   };
 
   const openMenu = () => {
@@ -205,9 +222,16 @@ export default function SushiCounter() {
             {floaters.map((floater) => (
               <FloatingPlusOne key={floater.id} accent={theme.accent} left={floater.left} />
             ))}
-            <SushiButton onPress={eat} top={theme.top} topHi={theme.topHi} stripe={theme.stripe} />
+            <SushiButton
+              onPress={eat}
+              onSwipeDown={uneat}
+              top={theme.top}
+              topHi={theme.topHi}
+              stripe={theme.stripe}
+            />
           </View>
           <Text style={[styles.hint, { color: NEUTRAL.mutedTextStrong }]}>{strings.tap}</Text>
+          <Text style={[styles.hintSmall, { color: NEUTRAL.mutedTextFaint }]}>{strings.swipeDownHint}</Text>
         </View>
       </View>
 
@@ -292,17 +316,23 @@ function CounterNumber({ count, accent }: { count: number; accent: string }) {
   );
 }
 
+/** How far down (in px) a swipe on the sushi must travel to subtract one. */
+const SWIPE_DOWN_THRESHOLD = 45;
+
 /**
  * The tappable sushi nigiri. Plays a one-off entrance bounce on mount, an
- * infinite idle "bob" loop, and shrinks slightly while pressed.
+ * infinite idle "bob" loop, and shrinks slightly while pressed. Swiping down
+ * over it calls `onSwipeDown` (used to subtract a piece).
  */
 function SushiButton({
   onPress,
+  onSwipeDown,
   top,
   topHi,
   stripe,
 }: {
   onPress: () => void;
+  onSwipeDown: () => void;
   top: string;
   topHi: string;
   stripe: string;
@@ -328,25 +358,38 @@ function SushiButton({
     transform: [{ translateY: interpolate(bob.value, [0, 1], [0, -7]) }],
   }));
 
+  // Only activates on a clearly vertical downward drag, so plain taps still
+  // reach the Pressable inside.
+  const swipeDown = Gesture.Pan()
+    .activeOffsetY(15)
+    .failOffsetX([-15, 15])
+    .onEnd((swipeEndEvent) => {
+      if (swipeEndEvent.translationY > SWIPE_DOWN_THRESHOLD) {
+        runOnJS(onSwipeDown)();
+      }
+    });
+
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityLabel="Comer una pieza de sushi"
-      onPressIn={() => {
-        pressScale.value = withTiming(0.9, { duration: 100 });
-      }}
-      onPressOut={() => {
-        pressScale.value = withTiming(1, { duration: 100 });
-      }}
-    >
-      <Animated.View style={pressStyle}>
-        <Animated.View style={entranceStyle}>
-          <Animated.View style={bobStyle}>
-            <Sushi topColor={top} topHi={topHi} stripe={stripe} />
+    <GestureDetector gesture={swipeDown}>
+      <Pressable
+        onPress={onPress}
+        accessibilityLabel="Comer una pieza de sushi"
+        onPressIn={() => {
+          pressScale.value = withTiming(0.9, { duration: 100 });
+        }}
+        onPressOut={() => {
+          pressScale.value = withTiming(1, { duration: 100 });
+        }}
+      >
+        <Animated.View style={pressStyle}>
+          <Animated.View style={entranceStyle}>
+            <Animated.View style={bobStyle}>
+              <Sushi topColor={top} topHi={topHi} stripe={stripe} />
+            </Animated.View>
           </Animated.View>
         </Animated.View>
-      </Animated.View>
-    </Pressable>
+      </Pressable>
+    </GestureDetector>
   );
 }
 
@@ -392,6 +435,11 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontFamily: 'Fredoka_500Medium',
     fontSize: 15,
+  },
+  hintSmall: {
+    marginTop: 2,
+    fontFamily: 'Fredoka_500Medium',
+    fontSize: 12,
   },
   overlay: {
     zIndex: 8,
