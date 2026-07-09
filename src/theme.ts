@@ -216,4 +216,4 @@ export const DEV_LINKS = {
   suggestionsEmail: 'ramonjunior04@gmail.com',
 };
 
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION = '1.0.907';

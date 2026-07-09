@@ -2,7 +2,7 @@
   "expo": {
     "name": "SUSHITAP",
     "slug": "sushitap",
-    "version": "0.1.0",
+    "version": "1.0.907",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -13,11 +13,11 @@
       "backgroundColor": "#FFF6EE"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.d1ito.sushitap"
     },
     "android": {
       "package": "dev.d1ito.sushitap",
-      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFF6EE"
@@ -31,6 +31,11 @@
     "plugins": [
       "expo-font",
       "expo-localization"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f10e639d-a66b-4999-bfdf-5cb998765e7d"
+      }
+    }
   }
 }
